@@ -1,0 +1,20 @@
+name:                hscc
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/Zylphrex/hscc
+license:             MIT
+author:              Tony
+maintainer:          zylphrex@gmail.com
+copyright:           2021 Tony
+category:            Compiler
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+
+executables:
+  hscc:
+    source-dirs:      src
+    main:             Main.hs
