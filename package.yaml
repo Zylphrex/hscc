@@ -12,8 +12,9 @@ extra-source-files:
 - README.md
 
 dependencies:
-  - base >= 4.7 && < 5
-  - mtl  >= 2.2 && < 2.3
+  - base      >= 4.7 && < 5
+  - filepath  >= 1.4 && < 1.5
+  - mtl       >= 2.2 && < 2.3
 
 executables:
   hscc:
