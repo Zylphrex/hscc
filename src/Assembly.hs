@@ -1,5 +1,7 @@
 module Assembly where
 
+import System.Info ( os )
+
 import Ast ( Program(Program)
            , Function(Function)
            , Statement(Return)
@@ -14,7 +16,13 @@ instance Assembly Program where
 
 instance Assembly Function where
     asAssembly (Function returnType identifier arguments body) =
-        "\t.globl\t" ++ identifier ++ "\n" ++ identifier ++ ":\n" ++ asAssembly body
+        "\t.globl\t" ++ alias ++ "\n" ++ alias ++ ":\n" ++ asAssembly body
+        where alias = makeAlias identifier
+
+makeAlias :: String -> String
+makeAlias identifier = case os of
+    "darwin" -> '_' : identifier
+    _        -> identifier
 
 instance Assembly Statement where
     asAssembly (Return expression) =
