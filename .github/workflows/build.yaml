@@ -1,0 +1,39 @@
+on: [push, workflow_dispatch]
+
+name: build
+
+jobs:
+  test:
+    name: test
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        ghc: ['8.10.4']
+        stack: ['2.5.1']
+
+    steps:
+      - name: Checking out source
+        uses: actions/checkout@v2
+      - name: Caching dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.stack
+          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ matrix.stack }}
+      - name: Installing stack
+        uses: haskell/actions/setup@v1
+        with:
+          enable-stack: true
+          ghc-version: ${{ matrix.ghc }}
+          stack-version: ${{ matrix.stack }}
+      - name: Installing GHC
+        run: stack setup
+      - name: Installing Dependencies
+        run: stack build --only-dependencies
+      - name: Building Tests
+        run: stack build --test --no-run-tests
+      - name: Running Tests
+        run: stack --no-terminal --skip-ghc-check test
