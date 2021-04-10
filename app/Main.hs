@@ -6,6 +6,7 @@ import System.Environment ( getArgs )
 import System.Exit ( ExitCode(ExitFailure), exitWith )
 import System.FilePath ( extSeparator, takeBaseName )
 import System.IO ( readFile )
+import Text.PrettyPrint ( render )
 
 import Ast ( Program )
 import Assembly (asAssembly )
@@ -34,4 +35,4 @@ compile :: Program -> String
 compile = asAssembly
 
 format :: Program -> String
-format = show . prettyPrint
+format = render . prettyPrint
