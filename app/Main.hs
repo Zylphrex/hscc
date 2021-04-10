@@ -6,10 +6,14 @@ import System.Environment ( getArgs )
 import System.Exit ( ExitCode(ExitFailure), exitWith )
 import System.FilePath ( extSeparator, takeBaseName )
 import System.IO ( readFile )
+import System.Info ( os )
 import Text.PrettyPrint ( render )
 
 import Ast ( Program )
-import Assembly (asAssembly )
+import Assembly ( Option(Option)
+                , OsOption(Darwin, Other), asAssembly
+                , osOption
+                )
 import Parser ( executeParser, Parser(runParser) )
 import Pretty ( prettyPrint )
 import ProgramParser ( parseProgram )
@@ -32,7 +36,9 @@ parse :: String -> Maybe Program
 parse = executeParser parseProgram
 
 compile :: Program -> String
-compile = asAssembly
+compile = asAssembly option
+    where osOption = if os == "darwin" then Darwin else Other
+          option   = Option { osOption = osOption }
 
 format :: Program -> String
 format = render . prettyPrint
