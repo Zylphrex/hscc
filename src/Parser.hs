@@ -1,7 +1,11 @@
 module Parser where
 
 import Control.Applicative ( Alternative((<|>), empty) )
-import Control.Monad.State ( StateT(StateT), evalStateT, mapStateT, runStateT )
+import Control.Monad.State ( StateT(StateT)
+                           , evalStateT
+                           , mapStateT
+                           , runStateT
+                           )
 import Data.Char ( isSpace )
 
 newtype ParserState = ParserState
@@ -10,6 +14,9 @@ newtype ParserState = ParserState
 
 instance Read ParserState where
     readsPrec _ s = [(ParserState { buffer = s }, "")]
+
+instance Eq ParserState where
+    (ParserState a) == (ParserState b) = a == b
 
 newtype Parser a = Parser
     { runParser :: StateT ParserState Maybe a
@@ -32,10 +39,15 @@ instance Monad Parser where
                 (a, state) <- runStateT p state
                 runStateT (runParser (mp a)) state
 
+tryParser :: Parser a -> String -> Maybe (a, ParserState)
+tryParser (Parser p) s = runStateT p $ read s
+
 executeParser :: Parser a -> String -> Maybe a
-executeParser (Parser p) s = do
-    (a, state) <- runStateT p $ read s
-    if null (buffer state) then pure a else empty
+executeParser p s = do
+    (a, state) <- tryParser p s
+    if null (buffer state)
+        then pure a
+        else empty
 
 mapSnd :: (b -> c) -> (a, b) -> (a, c)
 mapSnd f (a, b) = (a, f b)
@@ -45,8 +57,9 @@ fromPair = mapSnd ParserState
 
 parseIf :: (Char -> Bool) -> Parser Char
 parseIf predicate = Parser $ StateT p
-    where p (ParserState (x:xs)) | predicate x = pure $ fromPair (x, xs)
-          p _                                  = empty
+    where p (ParserState (x:xs))
+              | predicate x = pure $ fromPair (x, xs)
+          p _               = empty
 
 parseWhile :: (Char -> Bool) -> Parser String
 parseWhile predicate = Parser $ StateT p

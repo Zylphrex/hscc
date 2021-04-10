@@ -9,7 +9,10 @@ maintainer:          zylphrex@gmail.com
 copyright:           2021 Tony
 category:            Compiler
 extra-source-files:
-- README.md
+  - README.md
+
+library:
+  source-dirs:      src
 
 dependencies:
   - base      >= 4.7 && < 5
@@ -19,5 +22,16 @@ dependencies:
 
 executables:
   hscc:
-    source-dirs:      src
+    source-dirs:      app
     main:             Main.hs
+    dependencies:
+      - hscc
+
+tests:
+  hscc-test:
+    source-dirs:      test
+    main:             Spec.hs
+    ghc-options:      -Wall
+    dependencies:
+      - hscc
+      - hspec >= 2.0
