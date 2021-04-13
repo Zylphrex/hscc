@@ -37,3 +37,16 @@ jobs:
         run: stack build --test --no-run-tests
       - name: Running Tests
         run: stack --no-terminal --skip-ghc-check test
+
+  lint:
+    name: lint
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checking out source
+        uses: actions/checkout@v2
+      - name: Haskell Linter
+        uses: domdere/haskell-lint-action@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
