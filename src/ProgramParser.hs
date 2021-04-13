@@ -7,8 +7,9 @@ import Data.Functor (($>))
 import Ast ( Program(Program)
            , Function(Function, returnType, identifier, body)
            , Type(Int)
-           , Statement (Return)
-           , Expression (Int32)
+           , Statement(Return)
+           , Expression(Int32, UnaryExpression)
+           , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
            )
 import Parser ( Parser(Parser, runParser)
               , parseCharacter
@@ -56,6 +57,12 @@ parseReturn = Return <$>
 
 parseExpression :: Parser Expression
 parseExpression = Int32 <$> (read <$> parseNotNull (parseWhile isDigit))
+    <|> UnaryExpression <$> parseUnaryOperator <*> parseExpression
+
+parseUnaryOperator :: Parser UnaryOperator
+parseUnaryOperator = Negation <$ parseCharacter '-'
+    <|> BitwiseComplement <$ parseCharacter '~'
+    <|> LogicalNegation <$ parseCharacter '!'
 
 parseType :: Parser Type
 parseType = Int <$ parseString "int"

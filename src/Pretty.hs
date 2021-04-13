@@ -6,7 +6,8 @@ import Ast ( Program(Program)
            , Function(Function)
            , Type(Int)
            , Statement(Return)
-           , Expression(Int32)
+           , Expression(Int32, UnaryExpression)
+           , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
            )
 
 class PrettyPrint a where
@@ -30,4 +31,11 @@ instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
 
 instance PrettyPrint Expression where
-    prettyPrint (Int32 num) = text "INT32" <> char '<' <> text (show num) <> char '>'
+    prettyPrint (Int32 num) =
+        text "INT32" <> char '<' <> text (show num) <> char '>'
+    prettyPrint (UnaryExpression Negation expression) =
+        text "NEGATE" <> char '<' <> prettyPrint expression <> char '>'
+    prettyPrint (UnaryExpression BitwiseComplement expression) =
+        text "BITWISE_COMPLEMENT" <> char '<' <> prettyPrint expression <> char '>'
+    prettyPrint (UnaryExpression LogicalNegation expression) =
+        text "LOGICAL_NEGATION" <> char '<' <> prettyPrint expression <> char '>'

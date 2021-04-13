@@ -31,8 +31,21 @@ newtype Statement = Return Expression
 instance Eq Statement where
     Return e1 == Return e2 = e1 == e2
 
-newtype Expression = Int32 Int32
+data Expression = Int32 Int32
+                | UnaryExpression UnaryOperator Expression
     deriving Show
 
 instance Eq Expression where
     Int32 x == Int32 y = x == y
+    UnaryExpression op1 exp1 == UnaryExpression op2 exp2 =
+      op1 == op2 && exp1 == exp2
+
+data UnaryOperator = Negation
+                   | BitwiseComplement
+                   | LogicalNegation
+    deriving Show
+
+instance Eq UnaryOperator where
+    Negation          == Negation          = True
+    BitwiseComplement == BitwiseComplement = True
+    LogicalNegation   == LogicalNegation   = True
