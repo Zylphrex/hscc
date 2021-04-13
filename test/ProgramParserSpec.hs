@@ -8,6 +8,7 @@ import Ast ( Expression(Int32)
            , Function(Function)
            , Statement(Return)
            , Type(Int)
+           , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
            , returnType
            , identifier
            , arguments
@@ -19,6 +20,7 @@ import ProgramParser ( parseExpression
                      , parseIdentifier
                      , parseStatement
                      , parseType
+                     , parseUnaryOperator
                      )
 
 spec :: Spec
@@ -74,6 +76,47 @@ spec = do
                 let parser  = parseIdentifier
                     mResult = tryParser parser "aB_1$"
                 mResult `shouldBe` pure ("aB_1", read "$")
+
+        describe "parseUnaryOperator" $ do
+            it "fails to parse empty operator" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser ""
+                mResult `shouldBe` empty
+
+            it "fails to parse bad unary operator" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "$"
+                mResult `shouldBe` empty
+
+            it "parse negation operator" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "-"
+                mResult `shouldBe` pure (Negation, read "")
+
+            it "parse negation operator and leaves the rest" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "-5"
+                mResult `shouldBe` pure (Negation, read "5")
+
+            it "parse bitwise complement operator" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "~"
+                mResult `shouldBe` pure (BitwiseComplement, read "")
+
+            it "parse bitwise complement operator and leaves the rest" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "~5"
+                mResult `shouldBe` pure (BitwiseComplement, read "5")
+
+            it "parse logical negation operator" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "!"
+                mResult `shouldBe` pure (LogicalNegation, read "")
+
+            it "parse bitwise complement operator and leaves the rest" $ do
+                let parser  = parseUnaryOperator
+                    mResult = tryParser parser "!5"
+                mResult `shouldBe` pure (LogicalNegation, read "5")
 
         describe "parseType" $ do
             it "fails to parse empty type" $ do
