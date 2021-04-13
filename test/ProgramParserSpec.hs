@@ -237,6 +237,11 @@ spec = do
                     mResult = tryParser parser "int main () {return ;}"
                 mResult `shouldBe` empty
 
+            it "fails to parse function without space between type and identifier" $ do
+                let parser  = parseFunction
+                    mResult = tryParser parser "intmain () {return 124;}"
+                mResult `shouldBe` empty
+
             it "parses simple integer function" $ do
                 let parser  = parseFunction
                     mResult = tryParser parser "int main () {return 124;}"
