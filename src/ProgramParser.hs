@@ -26,7 +26,7 @@ parseProgram = Program <$> parseFunction <* parseSpaces
 parseFunction :: Parser Function
 parseFunction = Function
     <$> (parseSpaces *> parseType)
-    <*> (parseSpaces *> parseIdentifier)
+    <*> (parseNotNull parseSpaces *> parseIdentifier)
     <*> (  parseSpaces
         *> parseCharacter '('
         *> parseSpaces
