@@ -36,7 +36,20 @@ jobs:
       - name: Building Tests
         run: stack build --test --no-run-tests
       - name: Running Tests
-        run: stack --no-terminal --skip-ghc-check test
+        run: stack --no-terminal --skip-ghc-check --coverage test
+      - name: Generating Coverage
+        run: |
+          mix=$(find .stack-work/dist -name 'hpc')
+          tix=$(find .stack-work/install -name '*.tix')
+          stack exec hpc-codecov -- --mix=$mix --exclude=Paths_hpc_codecov --out=codecov.json $tix
+      - name: Uploading Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: codecov.json
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
 
   lint:
     name: lint

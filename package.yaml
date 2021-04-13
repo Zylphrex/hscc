@@ -34,4 +34,6 @@ tests:
     ghc-options:      -Wall
     dependencies:
       - hscc
-      - hspec >= 2.0
+      - hlint        >= 3.2 && < 3.3
+      - hpc-codecov  >= 0.2 && < 0.3
+      - hspec        >= 2.0
