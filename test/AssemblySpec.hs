@@ -16,6 +16,7 @@ import Ast ( Expression(Int32, UnaryExpression)
 import Assembly ( OsOption(Darwin, Other)
                 , Option(Option)
                 , asAssembly
+                , joinAssembly
                 , osOption
                 )
 
@@ -32,7 +33,11 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\t_main\n_main:\n\tmovl\t$124, %eax\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tretq"
+                                             ]
 
         it "translates programs with negation" $ do
             let expression = UnaryExpression Negation $ Int32 124
@@ -43,7 +48,12 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\t_main\n_main:\n\tmovl\t$124, %eax\n\tneg\t%eax\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tnegq\t%rax"
+                                             , "\tretq"
+                                             ]
 
         it "translates programs with bitwise complement" $ do
             let expression = UnaryExpression BitwiseComplement $ Int32 124
@@ -54,7 +64,12 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\t_main\n_main:\n\tmovl\t$124, %eax\n\tnot\t%eax\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tnotq\t%rax"
+                                             , "\tretq"
+                                             ]
 
         it "translates programs with logical negation" $ do
             let expression = UnaryExpression LogicalNegation $ Int32 124
@@ -65,7 +80,14 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\t_main\n_main:\n\tmovl\t$124, %eax\n\tcmpl\t$0, %eax\n\tsete\t%al\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tcmpq\t$0, %rax"
+                                             , "\tmovq\t$0, %rax"
+                                             , "\tsete\t%al"
+                                             , "\tretq"
+                                             ]
 
     describe "Other" $ do
         let option = Option { osOption = Other }
@@ -78,7 +100,11 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\tmain\nmain:\n\tmovl\t$124, %eax\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tretq"
+                                             ]
 
         it "translates programs with negation" $ do
             let expression = UnaryExpression Negation $ Int32 124
@@ -89,7 +115,12 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\tmain\nmain:\n\tmovl\t$124, %eax\n\tneg\t%eax\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tnegq\t%rax"
+                                             , "\tretq"
+                                             ]
 
         it "translates programs with bitwise complement" $ do
             let expression = UnaryExpression BitwiseComplement $ Int32 124
@@ -100,7 +131,12 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\tmain\nmain:\n\tmovl\t$124, %eax\n\tnot\t%eax\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tnotq\t%rax"
+                                             , "\tretq"
+                                             ]
 
         it "translates programs with logical negation" $ do
             let expression = UnaryExpression LogicalNegation $ Int32 124
@@ -111,4 +147,11 @@ spec = describe "Assembly" $ do
                                     }
                 program  = Program function
                 assembly = asAssembly option program
-            assembly `shouldBe` "\t.globl\tmain\nmain:\n\tmovl\t$124, %eax\n\tcmpl\t$0, %eax\n\tsete\t%al\n\tretq\n"
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$124, %rax"
+                                             , "\tcmpq\t$0, %rax"
+                                             , "\tmovq\t$0, %rax"
+                                             , "\tsete\t%al"
+                                             , "\tretq"
+                                             ]
