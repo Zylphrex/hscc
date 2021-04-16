@@ -38,7 +38,7 @@ data Expression = Int32 Int32
 instance Eq Expression where
     Int32 x == Int32 y = x == y
     UnaryExpression op1 exp1 == UnaryExpression op2 exp2 =
-      op1 == op2 && exp1 == exp2
+        op1 == op2 && exp1 == exp2
 
 data UnaryOperator = Negation
                    | BitwiseComplement

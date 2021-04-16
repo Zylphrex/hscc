@@ -1,6 +1,15 @@
 module Pretty where
 
-import Text.PrettyPrint ( Doc, char, colon, empty, int, nest, parens, space, text, ($$) )
+import Text.PrettyPrint ( Doc
+                        , char
+                        , colon
+                        , empty
+                        , nest
+                        , parens
+                        , space
+                        , text
+                        , ($$)
+                        )
 
 import Ast ( Program(Program)
            , Function(Function)
@@ -31,11 +40,7 @@ instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
 
 instance PrettyPrint Expression where
-    prettyPrint (Int32 num) =
-        text "INT32" <> char '<' <> text (show num) <> char '>'
-    prettyPrint (UnaryExpression Negation expression) =
-        text "NEGATE" <> char '<' <> prettyPrint expression <> char '>'
-    prettyPrint (UnaryExpression BitwiseComplement expression) =
-        text "BITWISE_COMPLEMENT" <> char '<' <> prettyPrint expression <> char '>'
-    prettyPrint (UnaryExpression LogicalNegation expression) =
-        text "LOGICAL_NEGATION" <> char '<' <> prettyPrint expression <> char '>'
+    prettyPrint (Int32 num) = text $ show num
+    prettyPrint (UnaryExpression Negation exp) = char '-' <> prettyPrint exp
+    prettyPrint (UnaryExpression BitwiseComplement exp) = char '~' <> prettyPrint exp
+    prettyPrint (UnaryExpression LogicalNegation exp) = char '!' <> prettyPrint exp

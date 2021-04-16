@@ -19,7 +19,10 @@ instance Assembly Program where
 
 instance Assembly Function where
     asAssembly opt (Function returnType identifier arguments body) =
-        "\t.globl\t" ++ alias ++ "\n" ++ alias ++ ":\n" ++ asAssembly opt body
+        joinAssembly [ "\t.globl\t" ++ alias
+                     , alias ++ ":"
+                     , asAssembly opt body
+                     ]
         where alias = makeAlias opt identifier
 
 makeAlias :: Option -> String -> String
@@ -33,10 +36,21 @@ instance Assembly Statement where
 
 instance Assembly Expression where
     asAssembly _ (Int32 value) =
-        "\tmovl\t$" ++ show value ++ ", %eax\n"
-    asAssembly opt (UnaryExpression Negation expression) =
-        asAssembly opt expression ++ "\tneg\t%eax\n"
-    asAssembly opt (UnaryExpression BitwiseComplement expression) =
-        asAssembly opt expression ++ "\tnot\t%eax\n"
-    asAssembly opt (UnaryExpression LogicalNegation expression) =
-        asAssembly opt expression ++ "\tcmpl\t$0, %eax\n\tsete\t%al\n"
+        joinAssembly [ "\tmovq\t$" ++ show value ++ ", %rax" ]
+    asAssembly opt (UnaryExpression Negation exp) =
+        joinAssembly [ asAssembly opt exp
+                     , "\tnegq\t%rax"
+                     ]
+    asAssembly opt (UnaryExpression BitwiseComplement exp) =
+        joinAssembly [ asAssembly opt exp
+                     , "\tnotq\t%rax"
+                     ]
+    asAssembly opt (UnaryExpression LogicalNegation exp) =
+        joinAssembly [ asAssembly opt exp
+                     , "\tcmpq\t$0, %rax"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsete\t%al"
+                     ]
+
+joinAssembly :: [String] -> String
+joinAssembly = unlines . map (reverse . dropWhile (== '\n') . reverse)
