@@ -1,3 +1,4 @@
+{-# HLINT ignore "Reduce duplication" #-}
 module AssemblySpec ( spec ) where
 
 import Test.Hspec
