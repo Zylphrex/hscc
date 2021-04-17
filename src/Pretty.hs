@@ -15,8 +15,9 @@ import Ast ( Program(Program)
            , Function(Function)
            , Type(Int)
            , Statement(Return)
-           , Expression(Int32, UnaryExpression)
+           , Expression(Int32, UnaryExpression, BinaryExpression)
            , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
+           , BinaryOperator(Addition, Subtraction, Multiplication, Division)
            )
 
 class PrettyPrint a where
@@ -44,3 +45,11 @@ instance PrettyPrint Expression where
     prettyPrint (UnaryExpression Negation exp) = char '-' <> prettyPrint exp
     prettyPrint (UnaryExpression BitwiseComplement exp) = char '~' <> prettyPrint exp
     prettyPrint (UnaryExpression LogicalNegation exp) = char '!' <> prettyPrint exp
+    prettyPrint (BinaryExpression exp1 Addition exp2) =
+        parens (prettyPrint exp1 <> char '+' <> prettyPrint exp2)
+    prettyPrint (BinaryExpression exp1 Subtraction exp2) =
+        parens (prettyPrint exp1 <> char '-' <> prettyPrint exp2)
+    prettyPrint (BinaryExpression exp1 Multiplication exp2) =
+        parens (prettyPrint exp1 <> char '*' <> prettyPrint exp2)
+    prettyPrint (BinaryExpression exp1 Division exp2) =
+        parens (prettyPrint exp1 <> char '/' <> prettyPrint exp2)

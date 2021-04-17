@@ -3,8 +3,9 @@ module Assembly where
 import Ast ( Program(Program)
            , Function(Function)
            , Statement(Return)
-           , Expression(Int32, UnaryExpression)
+           , Expression(Int32, UnaryExpression, BinaryExpression)
            , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
+           , BinaryOperator(Addition, Subtraction, Multiplication, Division)
            )
 
 data OsOption = Darwin | Other
@@ -50,6 +51,35 @@ instance Assembly Expression where
                      , "\tcmpq\t$0, %rax"
                      , "\tmovq\t$0, %rax"
                      , "\tsete\t%al"
+                     ]
+    asAssembly opt (BinaryExpression exp1 Addition exp2) =
+        joinAssembly [ asAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , asAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\taddq\t%rcx, %rax"
+                     ]
+    asAssembly opt (BinaryExpression exp1 Subtraction exp2) =
+        joinAssembly [ asAssembly opt exp2
+                     , "\tpush\t%rax"
+                     , asAssembly opt exp1
+                     , "\tpop\t%rcx"
+                     , "\tsubq\t%rcx, %rax"
+                     ]
+    asAssembly opt (BinaryExpression exp1 Multiplication exp2) =
+        joinAssembly [ asAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , asAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\timulq\t%rcx, %rax"
+                     ]
+    asAssembly opt (BinaryExpression exp1 Division exp2) =
+        joinAssembly [ asAssembly opt exp2
+                     , "\tpush\t%rax"
+                     , asAssembly opt exp1
+                     , "\tcqto"
+                     , "\tpop\t%rcx"
+                     , "\tidivq\t%rcx"
                      ]
 
 joinAssembly :: [String] -> String

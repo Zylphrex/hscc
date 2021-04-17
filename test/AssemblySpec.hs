@@ -3,12 +3,13 @@ module AssemblySpec ( spec ) where
 
 import Test.Hspec
 
-import Ast ( Expression(Int32, UnaryExpression)
+import Ast ( Expression(Int32, UnaryExpression, BinaryExpression)
            , Function(Function)
            , Program(Program)
            , Statement(Return)
            , Type(Int)
            , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
+           , BinaryOperator(Addition, Subtraction, Multiplication, Division)
            , returnType
            , identifier
            , arguments
@@ -90,6 +91,83 @@ spec = describe "Assembly" $ do
                                              , "\tretq"
                                              ]
 
+        it "translates programs with addition" $ do
+            let expression = BinaryExpression (Int32 4) Addition (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpop\t%rcx"
+                                             , "\taddq\t%rcx, %rax"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with subtraction" $ do
+            let expression = BinaryExpression (Int32 4) Subtraction (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tpop\t%rcx"
+                                             , "\tsubq\t%rcx, %rax"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with multiplication" $ do
+            let expression = BinaryExpression (Int32 4) Multiplication (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpop\t%rcx"
+                                             , "\timulq\t%rcx, %rax"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with division" $ do
+            let expression = BinaryExpression (Int32 4) Division (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\t_main"
+                                             , "_main:"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tcqto"
+                                             , "\tpop\t%rcx"
+                                             , "\tidivq\t%rcx"
+                                             , "\tretq"
+                                             ]
+
     describe "Other" $ do
         let option = Option { osOption = Other }
 
@@ -154,5 +232,82 @@ spec = describe "Assembly" $ do
                                              , "\tcmpq\t$0, %rax"
                                              , "\tmovq\t$0, %rax"
                                              , "\tsete\t%al"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with addition" $ do
+            let expression = BinaryExpression (Int32 4) Addition (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpop\t%rcx"
+                                             , "\taddq\t%rcx, %rax"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with subtraction" $ do
+            let expression = BinaryExpression (Int32 4) Subtraction (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tpop\t%rcx"
+                                             , "\tsubq\t%rcx, %rax"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with multiplication" $ do
+            let expression = BinaryExpression (Int32 4) Multiplication (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpop\t%rcx"
+                                             , "\timulq\t%rcx, %rax"
+                                             , "\tretq"
+                                             ]
+
+        it "translates programs with division" $ do
+            let expression = BinaryExpression (Int32 4) Division (Int32 2)
+                function = Function { returnType = Int
+                                    , identifier = "main"
+                                    , arguments  = ()
+                                    , body       = Return expression
+                                    }
+                program  = Program function
+                assembly = asAssembly option program
+            assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                             , "main:"
+                                             , "\tmovq\t$2, %rax"
+                                             , "\tpush\t%rax"
+                                             , "\tmovq\t$4, %rax"
+                                             , "\tcqto"
+                                             , "\tpop\t%rcx"
+                                             , "\tidivq\t%rcx"
                                              , "\tretq"
                                              ]
