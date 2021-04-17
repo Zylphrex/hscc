@@ -33,12 +33,16 @@ instance Eq Statement where
 
 data Expression = Int32 Int32
                 | UnaryExpression UnaryOperator Expression
+                | BinaryExpression Expression BinaryOperator Expression
     deriving Show
 
 instance Eq Expression where
     Int32 x == Int32 y = x == y
     UnaryExpression op1 exp1 == UnaryExpression op2 exp2 =
         op1 == op2 && exp1 == exp2
+    BinaryExpression lhs1 op1 rhs1 == BinaryExpression lhs2 op2 rhs2 =
+        lhs1 == lhs2 && op1 == op2 && rhs1 == rhs2
+    _ == _ = False
 
 data UnaryOperator = Negation
                    | BitwiseComplement
@@ -49,3 +53,17 @@ instance Eq UnaryOperator where
     Negation          == Negation          = True
     BitwiseComplement == BitwiseComplement = True
     LogicalNegation   == LogicalNegation   = True
+    _                 == _                 = False
+
+data BinaryOperator = Addition
+                    | Subtraction
+                    | Multiplication
+                    | Division
+    deriving Show
+
+instance Eq BinaryOperator where
+    Addition       == Addition       = True
+    Subtraction    == Subtraction    = True
+    Multiplication == Multiplication = True
+    Division       == Division       = True
+    _              == _              = False

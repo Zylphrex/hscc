@@ -4,11 +4,12 @@ import Test.Hspec
 
 import Control.Applicative ( Alternative(empty) )
 
-import Ast ( Expression(Int32)
+import Ast ( Expression(Int32, UnaryExpression, BinaryExpression)
            , Function(Function)
            , Statement(Return)
            , Type(Int)
            , UnaryOperator(Negation, BitwiseComplement, LogicalNegation)
+           , BinaryOperator(Addition, Subtraction, Multiplication, Division)
            , returnType
            , identifier
            , arguments
@@ -158,6 +159,50 @@ spec = describe "ProgramParser" $ do
             let parser  = parseExpression
                 mResult = tryParser parser "123c"
             mResult `shouldBe` pure (Int32 123, read "c")
+
+        it "parses unary expression with negation" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "-123"
+            mResult `shouldBe` pure (UnaryExpression Negation (Int32 123), read "")
+
+        it "parses unary expression with bitwise complement" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "~123"
+            mResult `shouldBe` pure (UnaryExpression BitwiseComplement (Int32 123), read "")
+
+        it "parses unary expression with logical negation" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "!123"
+            mResult `shouldBe` pure (UnaryExpression LogicalNegation (Int32 123), read "")
+
+        it "parse binary expression with addition" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "1+1"
+            mResult `shouldBe` pure (BinaryExpression (Int32 1) Addition (Int32 1), read "")
+
+        it "parse binary expression with subtraction" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "1-1"
+            mResult `shouldBe` pure (BinaryExpression (Int32 1) Subtraction (Int32 1), read "")
+
+        it "parse binary expression with multiplication" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "1*1"
+            mResult `shouldBe` pure (BinaryExpression (Int32 1) Multiplication (Int32 1), read "")
+
+        it "parse binary expression with division" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "1/1"
+            mResult `shouldBe` pure (BinaryExpression (Int32 1) Division (Int32 1), read "")
+
+        it "parse complex binary expression" $ do
+            let parser  = parseExpression
+                mResult = tryParser parser "1    +  4 *(   3   - 1)/ 2"
+                exp1    = BinaryExpression (Int32 3) Subtraction (Int32 1)
+                exp2    = BinaryExpression (Int32 4) Multiplication exp1
+                exp3    = BinaryExpression exp2 Division (Int32 2)
+                exp4    = BinaryExpression (Int32 1) Addition exp3
+            mResult `shouldBe` pure (exp4, read "")
 
     describe "parseStatement" $ do
         it "fails to parse empty statement" $ do
