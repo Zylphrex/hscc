@@ -82,3 +82,9 @@ spec = do
 
                 it "should render greater than" $ do
                     render (prettyPrint GreaterThan) `shouldBe` ">"
+
+                it "should render equals" $ do
+                    render (prettyPrint Equals) `shouldBe` "=="
+
+                it "should render not equals" $ do
+                    render (prettyPrint NotEquals) `shouldBe` "!="

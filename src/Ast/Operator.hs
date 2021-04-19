@@ -33,8 +33,6 @@ data BinaryOperator = Multiplication
                     | GreaterThan
                     | Equals
                     | NotEquals
-                    | LogicalAnd
-                    | LogicalOr
     deriving (Eq, Show)
 
 instance PrettyPrint BinaryOperator where
@@ -48,5 +46,3 @@ instance PrettyPrint BinaryOperator where
     prettyPrint GreaterThan       = char '>'
     prettyPrint Equals            = text "=="
     prettyPrint NotEquals         = text "!="
-    prettyPrint LogicalAnd        = text "&&"
-    prettyPrint LogicalOr         = text "||"
