@@ -44,3 +44,4 @@ isIdentifierChar c = c == '_' || isLetter c || isDigit c
 isValidIdentifier :: String -> Bool
 isValidIdentifier [c]    = isLeadingChar c
 isValidIdentifier (c:cs) = isLeadingChar c && all isIdentifierChar cs
+isValidIdentifier []     = False

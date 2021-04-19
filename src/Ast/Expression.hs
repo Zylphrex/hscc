@@ -19,18 +19,10 @@ import Pretty ( PrettyPrint(prettyPrint) )
 data Expression = Int32 Int32
                 | UnaryExpression UnaryOperator Expression
                 | BinaryExpression Expression BinaryOperator Expression
-    deriving Show
+    deriving (Eq, Show)
 
 instance Parse Expression where
     parse = toExpression <$> (parse :: Parser RawExpression)
-
-instance Eq Expression where
-    Int32 x == Int32 y = x == y
-    UnaryExpression op1 exp1 == UnaryExpression op2 exp2 =
-        op1 == op2 && exp1 == exp2
-    BinaryExpression lhs1 op1 rhs1 == BinaryExpression lhs2 op2 rhs2 =
-        lhs1 == lhs2 && op1 == op2 && rhs1 == rhs2
-    _ == _ = False
 
 instance Assembly Expression where
     toAssembly _ (Int32 value) =

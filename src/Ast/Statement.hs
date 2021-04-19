@@ -12,7 +12,7 @@ import Parser ( Parse(parse)
 import Pretty ( PrettyPrint(prettyPrint) )
 
 newtype Statement = Return Expression
-    deriving Show
+    deriving (Eq, Show)
 
 instance Parse Statement where
     parse = Return <$> (  parseSpaces
@@ -22,9 +22,6 @@ instance Parse Statement where
                        <* parseSpaces
                        <* parseCharacter ';'
                        )
-
-instance Eq Statement where
-    Return e1 == Return e2 = e1 == e2
 
 instance Assembly Statement where
     toAssembly opt (Return expression) =

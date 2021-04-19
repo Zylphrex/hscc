@@ -10,13 +10,10 @@ import Data.Char ( isSpace )
 
 newtype ParserState = ParserState
     { buffer :: String
-    } deriving Show
+    } deriving (Eq, Show)
 
 instance Read ParserState where
     readsPrec _ s = [(ParserState { buffer = s }, "")]
-
-instance Eq ParserState where
-    (ParserState a) == (ParserState b) = a == b
 
 newtype Parser a = Parser
     { runParser :: StateT ParserState Maybe a

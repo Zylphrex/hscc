@@ -1,43 +1,72 @@
+{-# HLINT ignore "Redundant do" #-}
+{-# HLINT ignore "Reduce duplication" #-}
 module Ast.OperatorSpec ( spec ) where
 
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
+import Text.PrettyPrint ( render )
 
-import Ast.Operator ( UnaryOperator(..) )
+import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
 import Parser ( Parser, Parse(parse), tryParser )
+import Pretty ( PrettyPrint(prettyPrint) )
 
 spec :: Spec
-spec = describe "Operator" $ do
-    describe "Unary Operator" $ do
-        describe "Parse" $ do
-          it "fails to parse empty operator" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) ""
-              mResult `shouldBe` empty
+spec = do
+    describe "Operator" $ do
+        describe "Unary Operator" $ do
+            describe "Parse" $ do
+                it "fails to parse empty operator" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) ""
+                    mResult `shouldBe` empty
 
-          it "fails to parse bad unary operator" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "$"
-              mResult `shouldBe` empty
+                it "fails to parse bad unary operator" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "$"
+                    mResult `shouldBe` empty
 
-          it "parse negation operator" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "-"
-              mResult `shouldBe` pure (Negation, read "")
+                it "parse negation operator" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "-"
+                    mResult `shouldBe` pure (Negation, read "")
 
-          it "parse negation operator and leaves the rest" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "-5"
-              mResult `shouldBe` pure (Negation, read "5")
+                it "parse negation operator and leaves the rest" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "-5"
+                    mResult `shouldBe` pure (Negation, read "5")
 
-          it "parse bitwise complement operator" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "~"
-              mResult `shouldBe` pure (BitwiseComplement, read "")
+                it "parse bitwise complement operator" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "~"
+                    mResult `shouldBe` pure (BitwiseComplement, read "")
 
-          it "parse bitwise complement operator and leaves the rest" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "~5"
-              mResult `shouldBe` pure (BitwiseComplement, read "5")
+                it "parse bitwise complement operator and leaves the rest" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "~5"
+                    mResult `shouldBe` pure (BitwiseComplement, read "5")
 
-          it "parse logical negation operator" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "!"
-              mResult `shouldBe` pure (LogicalNegation, read "")
+                it "parse logical negation operator" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "!"
+                    mResult `shouldBe` pure (LogicalNegation, read "")
 
-          it "parse bitwise complement operator and leaves the rest" $ do
-              let mResult = tryParser (parse :: Parser UnaryOperator) "!5"
-              mResult `shouldBe` pure (LogicalNegation, read "5")
+                it "parse bitwise complement operator and leaves the rest" $ do
+                    let mResult = tryParser (parse :: Parser UnaryOperator) "!5"
+                    mResult `shouldBe` pure (LogicalNegation, read "5")
+
+            describe "PrettyPrint" $ do
+                it "should render negation" $ do
+                    render (prettyPrint Negation) `shouldBe` "-"
+
+                it "should render bitwise complement" $ do
+                    render (prettyPrint BitwiseComplement) `shouldBe` "~"
+
+                it "should render logical negation" $ do
+                    render (prettyPrint LogicalNegation) `shouldBe` "!"
+
+        describe "Binary Operator" $ do
+            describe "PrettyPrint" $ do
+                it "should render addition" $ do
+                    render (prettyPrint Addition) `shouldBe` "+"
+
+                it "should render subtraction" $ do
+                    render (prettyPrint Subtraction) `shouldBe` "-"
+
+                it "should render multiplication" $ do
+                    render (prettyPrint Multiplication) `shouldBe` "*"
+
+                it "should render Division" $ do
+                    render (prettyPrint Division) `shouldBe` "/"

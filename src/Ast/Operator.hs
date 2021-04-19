@@ -11,18 +11,12 @@ import Pretty ( PrettyPrint(prettyPrint) )
 data UnaryOperator = Negation
                    | BitwiseComplement
                    | LogicalNegation
-    deriving Show
+    deriving (Eq, Show)
 
 instance Parse UnaryOperator where
     parse = Negation <$ parseCharacter '-'
         <|> BitwiseComplement <$ parseCharacter '~'
         <|> LogicalNegation <$ parseCharacter '!'
-
-instance Eq UnaryOperator where
-    Negation          == Negation          = True
-    BitwiseComplement == BitwiseComplement = True
-    LogicalNegation   == LogicalNegation   = True
-    _                 == _                 = False
 
 instance PrettyPrint UnaryOperator where
     prettyPrint Negation          = char '-'
@@ -33,14 +27,7 @@ data BinaryOperator = Addition
                     | Subtraction
                     | Multiplication
                     | Division
-    deriving Show
-
-instance Eq BinaryOperator where
-    Addition       == Addition       = True
-    Subtraction    == Subtraction    = True
-    Multiplication == Multiplication = True
-    Division       == Division       = True
-    _              == _              = False
+    deriving (Eq, Show)
 
 instance PrettyPrint BinaryOperator where
     prettyPrint Addition       = char '+'
