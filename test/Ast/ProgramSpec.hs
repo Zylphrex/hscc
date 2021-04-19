@@ -5,6 +5,7 @@ module Ast.ProgramSpec ( spec ) where
 import Control.Applicative ( Alternative(empty) )
 import Data.Default ( def )
 import Test.Hspec
+import Text.PrettyPrint ( render )
 
 import Assembly ( joinAssembly, toAssembly )
 import Ast.Expression ( Expression(..) )
@@ -15,6 +16,7 @@ import Ast.Program ( Program(..) )
 import Ast.Statement ( Statement(..) )
 import Ast.Type ( Type(..) )
 import Parser ( Parser, Parse(parse), tryParser )
+import Pretty ( PrettyPrint(prettyPrint) )
 
 spec :: Spec
 spec = do
@@ -185,3 +187,19 @@ spec = do
                                                  , "\tidivq\t%rcx"
                                                  , "\tretq"
                                                  ]
+
+        describe "PrettyPrint" $ do
+            it "should render Program" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return $ Int32 124
+                                        }
+                    program = Program function
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FUN INT main:"
+                        , "    params: ()"
+                        , "    body:"
+                        , "        RETURN 124"
+                        ]
+                render (prettyPrint program) `shouldBe` rendered

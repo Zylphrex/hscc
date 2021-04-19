@@ -6,7 +6,8 @@ import Test.Hspec
 
 import Control.Applicative ( Alternative(empty) )
 
-import Parser ( tryParser
+import Parser ( executeParser
+              , tryParser
               , parseCharacter
               , parseIf
               , parseNotNull
@@ -18,6 +19,17 @@ import Parser ( tryParser
 spec :: Spec
 spec = do
     describe "Parser" $ do
+        describe "executeParser" $ do
+          it "fails when the parser fails" $ do
+              let parser  = parseCharacter 'c'
+                  mResult = executeParser parser ""
+              mResult `shouldBe` empty
+
+          it "succeeds when the parser succeeds" $ do
+              let parser  = parseCharacter 'c'
+                  mResult = executeParser parser "c"
+              mResult `shouldBe` pure 'c'
+
         describe "parseIf" $ do
             it "fails when predicate is false" $ do
                 let parser  = parseIf (== 'd')
