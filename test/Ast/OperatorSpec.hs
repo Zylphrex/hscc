@@ -59,14 +59,32 @@ spec = do
 
         describe "Binary Operator" $ do
             describe "PrettyPrint" $ do
+                it "should render multiplication" $ do
+                    render (prettyPrint Multiplication) `shouldBe` "*"
+
+                it "should render division" $ do
+                    render (prettyPrint Division) `shouldBe` "/"
+
                 it "should render addition" $ do
                     render (prettyPrint Addition) `shouldBe` "+"
 
                 it "should render subtraction" $ do
                     render (prettyPrint Subtraction) `shouldBe` "-"
 
-                it "should render multiplication" $ do
-                    render (prettyPrint Multiplication) `shouldBe` "*"
+                it "should render less than equals" $ do
+                    render (prettyPrint LessThanEquals) `shouldBe` "<="
 
-                it "should render Division" $ do
-                    render (prettyPrint Division) `shouldBe` "/"
+                it "should render less than" $ do
+                    render (prettyPrint LessThan) `shouldBe` "<"
+
+                it "should render greater than equals" $ do
+                    render (prettyPrint GreaterThanEquals) `shouldBe` ">="
+
+                it "should render greater than" $ do
+                    render (prettyPrint GreaterThan) `shouldBe` ">"
+
+                it "should render equals" $ do
+                    render (prettyPrint Equals) `shouldBe` "=="
+
+                it "should render not equals" $ do
+                    render (prettyPrint NotEquals) `shouldBe` "!="

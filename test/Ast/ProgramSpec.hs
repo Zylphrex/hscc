@@ -188,6 +188,132 @@ spec = do
                                                  , "\tretq"
                                                  ]
 
+            it "translates programs with less than equals" $ do
+                let expression = BinaryExpression (Int32 4) LessThanEquals (Int32 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = toAssembly def program
+                assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                                 , "main:"
+                                                 , "\tmovq\t$4, %rax"
+                                                 , "\tpush\t%rax"
+                                                 , "\tmovq\t$2, %rax"
+                                                 , "\tpop\t%rcx"
+                                                 , "\tcmpq\t%rax, %rcx"
+                                                 , "\tmovq\t$0, %rax"
+                                                 , "\tsetle\t%al"
+                                                 , "\tretq"
+                                                 ]
+
+            it "translates programs with greater than equals" $ do
+                let expression = BinaryExpression (Int32 4) GreaterThanEquals (Int32 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = toAssembly def program
+                assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                                 , "main:"
+                                                 , "\tmovq\t$4, %rax"
+                                                 , "\tpush\t%rax"
+                                                 , "\tmovq\t$2, %rax"
+                                                 , "\tpop\t%rcx"
+                                                 , "\tcmpq\t%rax, %rcx"
+                                                 , "\tmovq\t$0, %rax"
+                                                 , "\tsetge\t%al"
+                                                 , "\tretq"
+                                                 ]
+
+            it "translates programs with less than" $ do
+                let expression = BinaryExpression (Int32 4) LessThan (Int32 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = toAssembly def program
+                assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                                 , "main:"
+                                                 , "\tmovq\t$4, %rax"
+                                                 , "\tpush\t%rax"
+                                                 , "\tmovq\t$2, %rax"
+                                                 , "\tpop\t%rcx"
+                                                 , "\tcmpq\t%rax, %rcx"
+                                                 , "\tmovq\t$0, %rax"
+                                                 , "\tsetl\t%al"
+                                                 , "\tretq"
+                                                 ]
+
+            it "translates programs with equals" $ do
+                let expression = BinaryExpression (Int32 4) Equals (Int32 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = toAssembly def program
+                assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                                 , "main:"
+                                                 , "\tmovq\t$4, %rax"
+                                                 , "\tpush\t%rax"
+                                                 , "\tmovq\t$2, %rax"
+                                                 , "\tpop\t%rcx"
+                                                 , "\tcmpq\t%rax, %rcx"
+                                                 , "\tmovq\t$0, %rax"
+                                                 , "\tsete\t%al"
+                                                 , "\tretq"
+                                                 ]
+
+            it "translates programs with not equals" $ do
+                let expression = BinaryExpression (Int32 4) NotEquals (Int32 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = toAssembly def program
+                assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                                 , "main:"
+                                                 , "\tmovq\t$4, %rax"
+                                                 , "\tpush\t%rax"
+                                                 , "\tmovq\t$2, %rax"
+                                                 , "\tpop\t%rcx"
+                                                 , "\tcmpq\t%rax, %rcx"
+                                                 , "\tmovq\t$0, %rax"
+                                                 , "\tsetne\t%al"
+                                                 , "\tretq"
+                                                 ]
+
+            it "translates programs with greater than" $ do
+                let expression = BinaryExpression (Int32 4) GreaterThan (Int32 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = toAssembly def program
+                assembly `shouldBe` joinAssembly [ "\t.globl\tmain"
+                                                 , "main:"
+                                                 , "\tmovq\t$4, %rax"
+                                                 , "\tpush\t%rax"
+                                                 , "\tmovq\t$2, %rax"
+                                                 , "\tpop\t%rcx"
+                                                 , "\tcmpq\t%rax, %rcx"
+                                                 , "\tmovq\t$0, %rax"
+                                                 , "\tsetg\t%al"
+                                                 , "\tretq"
+                                                 ]
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int

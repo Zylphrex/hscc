@@ -3,7 +3,7 @@ module Ast.Operator ( UnaryOperator(..)
                     ) where
 
 import Control.Applicative ( Alternative((<|>)) )
-import Text.PrettyPrint ( char )
+import Text.PrettyPrint ( char, text )
 
 import Parser ( Parse(parse), parseCharacter )
 import Pretty ( PrettyPrint(prettyPrint) )
@@ -23,14 +23,26 @@ instance PrettyPrint UnaryOperator where
     prettyPrint BitwiseComplement = char '~'
     prettyPrint LogicalNegation   = char '!'
 
-data BinaryOperator = Addition
-                    | Subtraction
-                    | Multiplication
+data BinaryOperator = Multiplication
                     | Division
+                    | Addition
+                    | Subtraction
+                    | LessThanEquals
+                    | GreaterThanEquals
+                    | LessThan
+                    | GreaterThan
+                    | Equals
+                    | NotEquals
     deriving (Eq, Show)
 
 instance PrettyPrint BinaryOperator where
-    prettyPrint Addition       = char '+'
-    prettyPrint Subtraction    = char '-'
-    prettyPrint Multiplication = char '*'
-    prettyPrint Division       = char '/'
+    prettyPrint Multiplication    = char '*'
+    prettyPrint Division          = char '/'
+    prettyPrint Addition          = char '+'
+    prettyPrint Subtraction       = char '-'
+    prettyPrint LessThanEquals    = text "<="
+    prettyPrint GreaterThanEquals = text ">="
+    prettyPrint LessThan          = char '<'
+    prettyPrint GreaterThan       = char '>'
+    prettyPrint Equals            = text "=="
+    prettyPrint NotEquals         = text "!="
