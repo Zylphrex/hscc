@@ -39,6 +39,9 @@ instance Monad Parser where
                 (a, state) <- runStateT p state
                 runStateT (runParser (mp a)) state
 
+class Parse a where
+    parse :: Parser a
+
 tryParser :: Parser a -> String -> Maybe (a, ParserState)
 tryParser (Parser p) s = runStateT p $ read s
 

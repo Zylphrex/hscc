@@ -9,14 +9,14 @@ import System.IO ( readFile )
 import System.Info ( os )
 import Text.PrettyPrint ( render )
 
-import Ast ( Program )
+import Ast.Program ( Program )
 import Assembly ( Option(Option)
-                , OsOption(Darwin, Other), asAssembly
+                , OsOption(Darwin, Other)
                 , osOption
+                , toAssembly
                 )
-import Parser ( executeParser, Parser(runParser) )
+import Parser ( executeParser, Parser(runParser), parse )
 import Pretty ( prettyPrint )
-import ProgramParser ( parseProgram )
 
 main :: IO ()
 main = do
@@ -24,7 +24,7 @@ main = do
     when (length args /= 1) $ exitWith $ ExitFailure 1
     let inputFile = head args
     content <- readFile inputFile
-    let result = parse content
+    let result = (executeParser parse) content
     when (isNothing result) $ exitWith $ ExitFailure 2
     let (Just program) = result
     let outputFile = takeBaseName inputFile ++ [extSeparator, 's']
@@ -32,11 +32,8 @@ main = do
     putStrLn $ format program
     writeFile outputFile assembly
 
-parse :: String -> Maybe Program
-parse = executeParser parseProgram
-
 compile :: Program -> String
-compile = asAssembly option
+compile = toAssembly option
     where osOption = if os == "darwin" then Darwin else Other
           option   = Option { osOption = osOption }
 

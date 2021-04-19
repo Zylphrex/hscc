@@ -15,10 +15,11 @@ library:
   source-dirs:      src
 
 dependencies:
-  - base      >= 4.7 && < 5
-  - filepath  >= 1.4 && < 1.5
-  - mtl       >= 2.2 && < 2.3
-  - pretty    >= 1.1 && < 1.2
+  - base          >= 4.7 && < 5
+  - data-default  >= 0.7 && < 0.8
+  - filepath      >= 1.4 && < 1.5
+  - mtl           >= 2.2 && < 2.3
+  - pretty        >= 1.1 && < 1.2
 
 executables:
   hscc:
