@@ -24,7 +24,7 @@ main = do
     when (length args /= 1) $ exitWith $ ExitFailure 1
     let inputFile = head args
     content <- readFile inputFile
-    let result = (executeParser parse) content
+    let result = executeParser parse content
     when (isNothing result) $ exitWith $ ExitFailure 2
     let (Just program) = result
     let outputFile = takeBaseName inputFile ++ [extSeparator, 's']
