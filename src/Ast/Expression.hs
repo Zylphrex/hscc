@@ -12,6 +12,7 @@ import Parser ( Parse(parse)
               , parseCharacter
               , parseNotNull
               , parseSpaces
+              , parseString
               , parseWhile
               )
 import Pretty ( PrettyPrint(prettyPrint) )
@@ -70,6 +71,60 @@ instance Assembly Expression where
                      , "\tpop\t%rcx"
                      , "\tidivq\t%rcx"
                      ]
+    toAssembly opt (BinaryExpression exp1 LessThanEquals exp2) =
+        joinAssembly [ toAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , toAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\tcmpq\t%rax, %rcx"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsetle\t%al"
+                     ]
+    toAssembly opt (BinaryExpression exp1 GreaterThanEquals exp2) =
+        joinAssembly [ toAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , toAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\tcmpq\t%rax, %rcx"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsetge\t%al"
+                     ]
+    toAssembly opt (BinaryExpression exp1 LessThan exp2) =
+        joinAssembly [ toAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , toAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\tcmpq\t%rax, %rcx"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsetl\t%al"
+                     ]
+    toAssembly opt (BinaryExpression exp1 GreaterThan exp2) =
+        joinAssembly [ toAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , toAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\tcmpq\t%rax, %rcx"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsetg\t%al"
+                     ]
+    toAssembly opt (BinaryExpression exp1 Equals exp2) =
+        joinAssembly [ toAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , toAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\tcmpq\t%rax, %rcx"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsete\t%al"
+                     ]
+    toAssembly opt (BinaryExpression exp1 NotEquals exp2) =
+        joinAssembly [ toAssembly opt exp1
+                     , "\tpush\t%rax"
+                     , toAssembly opt exp2
+                     , "\tpop\t%rcx"
+                     , "\tcmpq\t%rax, %rcx"
+                     , "\tmovq\t$0, %rax"
+                     , "\tsetne\t%al"
+                     ]
 
 instance PrettyPrint Expression where
     prettyPrint (Int32 num) = text $ show num
@@ -77,38 +132,87 @@ instance PrettyPrint Expression where
     prettyPrint (BinaryExpression exp1 op exp2) =
         parens $ prettyPrint exp1 <> prettyPrint op <> prettyPrint exp2
 
-data RawBinaryOperatorP2 = RawAddition | RawSubtraction
+type RawExpression = RawEqualityExpression
+
+data RawEqualityOperator = RawEquals | RawNotEquals
     deriving Show
 
-instance Parse RawBinaryOperatorP2 where
+instance Parse RawEqualityOperator where
+    parse = RawEquals <$ parseString "=="
+        <|> RawNotEquals <$ parseString "!="
+
+instance BinaryOp RawEqualityOperator where
+    toBinaryOperator RawEquals    = Equals
+    toBinaryOperator RawNotEquals = NotEquals
+
+newtype RawEqualityExpression = RawEqualityExpression (RawExp RawRelationalExpression RawEqualityOperator)
+    deriving Show
+
+instance Parse RawEqualityExpression where
+    parse = RawEqualityExpression <$> parse
+
+instance Exp RawEqualityExpression where
+    toExpression (RawEqualityExpression t) = toExpression t
+
+data RawRelationalOperator = RawLessThanEquals
+                           | RawGreaterThanEquals
+                           | RawLessThan
+                           | RawGreaterThan
+    deriving Show
+
+instance Parse RawRelationalOperator where
+    parse = RawLessThanEquals <$ parseString "<="
+        <|> RawGreaterThanEquals <$ parseString ">="
+        <|> RawLessThan <$ parseCharacter '<'
+        <|> RawGreaterThan <$ parseCharacter '>'
+
+instance BinaryOp RawRelationalOperator where
+  toBinaryOperator RawLessThanEquals    = LessThanEquals
+  toBinaryOperator RawGreaterThanEquals = GreaterThanEquals
+  toBinaryOperator RawLessThan          = LessThan
+  toBinaryOperator RawGreaterThan       = GreaterThan
+
+newtype RawRelationalExpression = RawRelationalExpression (RawExp RawAdditiveExpression RawRelationalOperator)
+    deriving Show
+
+instance Parse RawRelationalExpression where
+    parse = RawRelationalExpression <$> parse
+
+instance Exp RawRelationalExpression where
+    toExpression (RawRelationalExpression t) = toExpression t
+
+data RawAdditiveOperator = RawAddition | RawSubtraction
+    deriving Show
+
+instance Parse RawAdditiveOperator where
     parse = RawAddition <$ parseCharacter '+'
         <|> RawSubtraction <$ parseCharacter '-'
 
-instance BinaryOp RawBinaryOperatorP2 where
+instance BinaryOp RawAdditiveOperator where
     toBinaryOperator RawAddition    = Addition
     toBinaryOperator RawSubtraction = Subtraction
 
-newtype RawExpression = RawExpression (RawExp RawTerm RawBinaryOperatorP2)
+newtype RawAdditiveExpression = RawAdditiveExpression (RawExp RawTerm RawAdditiveOperator)
     deriving Show
 
-instance Parse RawExpression where
-    parse = RawExpression <$> parse
+instance Parse RawAdditiveExpression where
+    parse = RawAdditiveExpression <$> parse
 
-instance Exp RawExpression where
-    toExpression (RawExpression t) = toExpression t
+instance Exp RawAdditiveExpression where
+    toExpression (RawAdditiveExpression t) = toExpression t
 
-data RawBinaryOperatorP3 = RawMultiplication | RawDivision
+data RawBinaryTermOperator = RawMultiplication | RawDivision
     deriving Show
 
-instance Parse RawBinaryOperatorP3 where
+instance Parse RawBinaryTermOperator where
     parse = RawMultiplication <$ parseCharacter '*'
         <|> RawDivision <$ parseCharacter '/'
 
-instance BinaryOp RawBinaryOperatorP3 where
+instance BinaryOp RawBinaryTermOperator where
     toBinaryOperator RawMultiplication = Multiplication
     toBinaryOperator RawDivision       = Division
 
-newtype RawTerm = RawTerm (RawExp RawFactor RawBinaryOperatorP3)
+newtype RawTerm = RawTerm (RawExp RawFactor RawBinaryTermOperator)
     deriving Show
 
 instance Parse RawTerm where

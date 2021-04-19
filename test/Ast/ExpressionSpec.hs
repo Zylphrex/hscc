@@ -59,13 +59,44 @@ spec = do
                 let mResult = tryParser (parse :: Parser Expression) "1/1"
                 mResult `shouldBe` pure (BinaryExpression (Int32 1) Division (Int32 1), read "")
 
-            it "parse complex binary expression" $ do
+            it "parse complex binary arithmetic expression" $ do
                 let mResult = tryParser (parse :: Parser Expression) "1    +  4 *(   3   - 1)/ 2"
                     exp1    = BinaryExpression (Int32 3) Subtraction (Int32 1)
                     exp2    = BinaryExpression (Int32 4) Multiplication exp1
                     exp3    = BinaryExpression exp2 Division (Int32 2)
                     exp4    = BinaryExpression (Int32 1) Addition exp3
                 mResult `shouldBe` pure (exp4, read "")
+
+            it "parse binary expression with less than equals" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1<=2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) LessThanEquals (Int32 2), read "")
+
+            it "parse binary expression with greater than equals" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1>=2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) GreaterThanEquals (Int32 2), read "")
+
+            it "parse binary expression with less than" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1<2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) LessThan (Int32 2), read "")
+
+            it "parse binary expression with greater than" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1>2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) GreaterThan (Int32 2), read "")
+
+            it "parse binary expression with equals" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1==2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) Equals (Int32 2), read "")
+
+            it "parse binary expression with not equals" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1!=2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) NotEquals (Int32 2), read "")
+
+            it "parse complex binary expression with relationals" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1 + (2 > 3) == 4"
+                    exp1    = BinaryExpression (Int32 2) GreaterThan (Int32 3)
+                    exp2    = BinaryExpression (Int32 1) Addition exp1
+                    exp3    = BinaryExpression exp2 Equals (Int32 4)
+                mResult `shouldBe` pure (exp3, read "")
 
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do
