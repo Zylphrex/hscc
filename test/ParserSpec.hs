@@ -25,6 +25,11 @@ spec = do
                   mResult = executeParser parser ""
               mResult `shouldBe` empty
 
+          it "fails when the parser did not consume everything" $ do
+              let parser  = parseCharacter 'c'
+                  mResult = executeParser parser "cc"
+              mResult `shouldBe` empty
+
           it "succeeds when the parser succeeds" $ do
               let parser  = parseCharacter 'c'
                   mResult = executeParser parser "c"
