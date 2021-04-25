@@ -1,13 +1,13 @@
 module Ast.Identifier ( Identifier, toIdentifier ) where
 
+import Control.Monad.State ( get )
 import Data.Char ( isDigit, isLetter )
 import Text.PrettyPrint ( text )
 
-import Assembly ( Assembly(toAssembly)
-                , joinAssembly
-                , Option
-                , OsOption(Darwin)
-                , osOption
+import Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , Os(Darwin, Other)
+                , os
                 )
 import Parser ( Parse(parse)
               , parseIf
@@ -26,11 +26,13 @@ toIdentifier s = if isValidIdentifier s
 instance Parse Identifier where
     parse = toIdentifier <$> ((:) <$> parseIf isLeadingChar <*> parseWhile isIdentifierChar)
 
-instance Assembly Identifier where
-    toAssembly opt (Identifier identifier) =
-        case osOption opt of
-            Darwin -> '_' : identifier
-            _      -> identifier
+instance Compile Identifier where
+    compile (Identifier identifier) = Compiler $ do
+        s <- get
+        let identifier' = case os s of
+                              Darwin -> '_' : identifier
+                              Other  -> identifier
+        return [identifier']
 
 instance PrettyPrint Identifier  where
     prettyPrint (Identifier identifier) = text identifier

@@ -4,15 +4,13 @@ import Data.Char ( isDigit, isLetter )
 import Data.Functor (($>))
 import Text.PrettyPrint ( colon, empty, nest, parens, space, text, ($$) )
 
-import Assembly ( Assembly(toAssembly)
-                , joinAssembly
-                , Option
-                , OsOption(Darwin)
-                , osOption
-                )
 import Ast.Identifier ( Identifier )
 import Ast.Statement ( Statement )
 import Ast.Type ( Type )
+import Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , runCompiler
+                )
 import Parser ( Parse(parse)
               , Parser
               , parseCharacter
@@ -47,13 +45,14 @@ instance Parse Function where
                          <* parseCharacter '}'
                          )
 
-instance Assembly Function where
-    toAssembly opt (Function returnType identifier arguments body) =
-        joinAssembly [ "\t.globl\t" ++ alias
-                     , alias ++ ":"
-                     , toAssembly opt body
-                     ]
-        where alias = toAssembly opt identifier
+instance Compile Function where
+    compile (Function returnType identifier arguments body) = Compiler $ do
+        identifier' <- runCompiler $ compile identifier
+        body' <- runCompiler $ compile body
+        return $ [ "\t.globl\t" ++ head identifier'
+                 , head identifier' ++ ":"
+                 ]
+              ++ body'
 
 instance PrettyPrint Function where
     prettyPrint (Function returnType identifier arguments body) =

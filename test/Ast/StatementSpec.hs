@@ -4,12 +4,11 @@ module Ast.StatementSpec ( spec ) where
 
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
-import Text.PrettyPrint ( render )
 
 import Ast.Expression ( Expression(Int32) )
 import Ast.Statement ( Statement(..) )
 import Parser ( Parser, Parse(parse), tryParser )
-import Pretty ( PrettyPrint(prettyPrint) )
+import Pretty ( PrettyPrint(render) )
 
 spec :: Spec
 spec = do
@@ -46,4 +45,4 @@ spec = do
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
                 let statement = Return $ Int32 124
-                render (prettyPrint statement) `shouldBe` "RETURN 124"
+                render statement `shouldBe` "RETURN 124"

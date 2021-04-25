@@ -4,12 +4,11 @@ module Ast.ExpressionSpec ( spec ) where
 
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
-import Text.PrettyPrint ( render )
 
 import Ast.Expression ( Expression(..) )
 import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
 import Parser ( Parser, Parse(parse), tryParser )
-import Pretty ( PrettyPrint(prettyPrint) )
+import Pretty ( PrettyPrint(render) )
 
 spec :: Spec
 spec = do
@@ -101,19 +100,19 @@ spec = do
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do
                 let expression = Int32 124
-                render (prettyPrint expression) `shouldBe` "124"
+                render expression `shouldBe` "124"
 
             it "should render unary expression" $ do
                 let expression = UnaryExpression LogicalNegation $ Int32 124
-                render (prettyPrint expression) `shouldBe` "!124"
+                render expression `shouldBe` "!124"
 
             it "should render binary expression" $ do
                 let expression = BinaryExpression (Int32 124) Addition (Int32 456)
-                render (prettyPrint expression) `shouldBe` "(124+456)"
+                render expression `shouldBe` "(124+456)"
 
             it "should render complex binary expression" $ do
                 let expression1 = BinaryExpression (Int32 3) Subtraction (Int32 1)
                     expression2 = BinaryExpression (Int32 4) Multiplication expression1
                     expression3 = BinaryExpression expression2 Division (Int32 2)
                     expression4 = BinaryExpression (Int32 1) Addition expression3
-                render (prettyPrint expression4) `shouldBe` "(1+((4*(3-1))/2))"
+                render expression4 `shouldBe` "(1+((4*(3-1))/2))"

@@ -2,8 +2,11 @@ module Ast.Statement ( Statement(..) ) where
 
 import Text.PrettyPrint ( space, text )
 
-import Assembly ( Assembly(toAssembly) )
 import Ast.Expression ( Expression )
+import Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , runCompiler
+                )
 import Parser ( Parse(parse)
               , parseCharacter
               , parseSpaces
@@ -23,9 +26,10 @@ instance Parse Statement where
                        <* parseCharacter ';'
                        )
 
-instance Assembly Statement where
-    toAssembly opt (Return expression) =
-        toAssembly opt expression ++ "\tretq\n"
+instance Compile Statement where
+    compile (Return exp) = Compiler $ do
+        exp' <- runCompiler $ compile exp
+        return $ exp' ++ ["\tretq"]
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
