@@ -155,8 +155,8 @@ instance Compile Expression where
         s <- get
         let i = n s
         put $ s { n = i + 1 }
-        let rhs = "_rhs" ++ show i
-            end = "_end" ++ show i
+        let rhs = "_rhs_and" ++ show i
+            end = "_end_and" ++ show i
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tjne " ++ rhs
@@ -175,8 +175,8 @@ instance Compile Expression where
         s <- get
         let i = n s
         put $ s { n = i + 1 }
-        let rhs = "_rhs" ++ show i
-            end = "_end" ++ show i
+        let rhs = "_rhs_or" ++ show i
+            end = "_end_or" ++ show i
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ rhs

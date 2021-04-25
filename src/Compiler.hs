@@ -4,7 +4,6 @@ module Compiler ( Compiler(Compiler)
                 , os
                 , n
                 , runCompiler
-                , tryCompiler
                 , executeCompiler
                 ) where
 
@@ -31,9 +30,6 @@ newtype Compiler a = Compiler
 
 class Compile a where
     compile :: a -> Compiler [String]
-
-tryCompiler :: Compiler a -> CompilerState -> Maybe (a, CompilerState)
-tryCompiler (Compiler c) = runStateT c
 
 executeCompiler :: Compiler a -> CompilerState -> Maybe a
 executeCompiler (Compiler c) = evalStateT c
