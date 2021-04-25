@@ -157,7 +157,6 @@ instance PrettyPrint Expression where
 type RawExpression = RawEqualityExpression
 
 data RawEqualityOperator = RawEquals | RawNotEquals
-    deriving Show
 
 instance Parse RawEqualityOperator where
     parse = RawEquals <$ parseString "=="
@@ -168,7 +167,6 @@ instance BinaryOp RawEqualityOperator where
     toBinaryOperator RawNotEquals = NotEquals
 
 newtype RawEqualityExpression = RawEqualityExpression (RawExp RawRelationalExpression RawEqualityOperator)
-    deriving Show
 
 instance Parse RawEqualityExpression where
     parse = RawEqualityExpression <$> parse
@@ -180,7 +178,6 @@ data RawRelationalOperator = RawLessThanEquals
                            | RawGreaterThanEquals
                            | RawLessThan
                            | RawGreaterThan
-    deriving Show
 
 instance Parse RawRelationalOperator where
     parse = RawLessThanEquals <$ parseString "<="
@@ -195,7 +192,6 @@ instance BinaryOp RawRelationalOperator where
   toBinaryOperator RawGreaterThan       = GreaterThan
 
 newtype RawRelationalExpression = RawRelationalExpression (RawExp RawAdditiveExpression RawRelationalOperator)
-    deriving Show
 
 instance Parse RawRelationalExpression where
     parse = RawRelationalExpression <$> parse
@@ -204,7 +200,6 @@ instance Exp RawRelationalExpression where
     toExpression (RawRelationalExpression t) = toExpression t
 
 data RawAdditiveOperator = RawAddition | RawSubtraction
-    deriving Show
 
 instance Parse RawAdditiveOperator where
     parse = RawAddition <$ parseCharacter '+'
@@ -215,7 +210,6 @@ instance BinaryOp RawAdditiveOperator where
     toBinaryOperator RawSubtraction = Subtraction
 
 newtype RawAdditiveExpression = RawAdditiveExpression (RawExp RawTerm RawAdditiveOperator)
-    deriving Show
 
 instance Parse RawAdditiveExpression where
     parse = RawAdditiveExpression <$> parse
@@ -224,7 +218,6 @@ instance Exp RawAdditiveExpression where
     toExpression (RawAdditiveExpression t) = toExpression t
 
 data RawBinaryTermOperator = RawMultiplication | RawDivision
-    deriving Show
 
 instance Parse RawBinaryTermOperator where
     parse = RawMultiplication <$ parseCharacter '*'
@@ -235,7 +228,6 @@ instance BinaryOp RawBinaryTermOperator where
     toBinaryOperator RawDivision       = Division
 
 newtype RawTerm = RawTerm (RawExp RawFactor RawBinaryTermOperator)
-    deriving Show
 
 instance Parse RawTerm where
     parse = RawTerm <$> parse
@@ -246,7 +238,6 @@ instance Exp RawTerm where
 data RawFactor = RawFactor RawExpression
                | UnaryRawFactor UnaryOperator RawFactor
                | IntegerRawFactor Int32
-    deriving Show
 
 instance Parse RawFactor where
     parse = RawFactor <$> (  parseCharacter '('
@@ -264,7 +255,6 @@ instance Exp RawFactor where
     toExpression (IntegerRawFactor x)  = Int32 x
 
 data RawExp t o = RawExp t [(o, t)]
-    deriving Show
 
 class Exp a where
     toExpression :: a -> Expression
