@@ -5,8 +5,11 @@ import Data.Char ( isDigit )
 import Data.Int ( Int32 )
 import Text.PrettyPrint ( char, parens, text )
 
-import Assembly ( Assembly(toAssembly), joinAssembly )
 import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
+import Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , runCompiler
+                )
 import Parser ( Parse(parse)
               , Parser
               , parseCharacter
@@ -25,106 +28,125 @@ data Expression = Int32 Int32
 instance Parse Expression where
     parse = toExpression <$> (parse :: Parser RawExpression)
 
-instance Assembly Expression where
-    toAssembly _ (Int32 value) =
-        joinAssembly [ "\tmovq\t$" ++ show value ++ ", %rax" ]
-    toAssembly opt (UnaryExpression Negation exp) =
-        joinAssembly [ toAssembly opt exp
-                     , "\tnegq\t%rax"
-                     ]
-    toAssembly opt (UnaryExpression BitwiseComplement exp) =
-        joinAssembly [ toAssembly opt exp
-                     , "\tnotq\t%rax"
-                     ]
-    toAssembly opt (UnaryExpression LogicalNegation exp) =
-        joinAssembly [ toAssembly opt exp
-                     , "\tcmpq\t$0, %rax"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsete\t%al"
-                     ]
-    toAssembly opt (BinaryExpression exp1 Addition exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\taddq\t%rcx, %rax"
-                     ]
-    toAssembly opt (BinaryExpression exp1 Subtraction exp2) =
-        joinAssembly [ toAssembly opt exp2
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp1
-                     , "\tpop\t%rcx"
-                     , "\tsubq\t%rcx, %rax"
-                     ]
-    toAssembly opt (BinaryExpression exp1 Multiplication exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\timulq\t%rcx, %rax"
-                     ]
-    toAssembly opt (BinaryExpression exp1 Division exp2) =
-        joinAssembly [ toAssembly opt exp2
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp1
-                     , "\tcqto"
-                     , "\tpop\t%rcx"
-                     , "\tidivq\t%rcx"
-                     ]
-    toAssembly opt (BinaryExpression exp1 LessThanEquals exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\tcmpq\t%rax, %rcx"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsetle\t%al"
-                     ]
-    toAssembly opt (BinaryExpression exp1 GreaterThanEquals exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\tcmpq\t%rax, %rcx"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsetge\t%al"
-                     ]
-    toAssembly opt (BinaryExpression exp1 LessThan exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\tcmpq\t%rax, %rcx"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsetl\t%al"
-                     ]
-    toAssembly opt (BinaryExpression exp1 GreaterThan exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\tcmpq\t%rax, %rcx"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsetg\t%al"
-                     ]
-    toAssembly opt (BinaryExpression exp1 Equals exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\tcmpq\t%rax, %rcx"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsete\t%al"
-                     ]
-    toAssembly opt (BinaryExpression exp1 NotEquals exp2) =
-        joinAssembly [ toAssembly opt exp1
-                     , "\tpush\t%rax"
-                     , toAssembly opt exp2
-                     , "\tpop\t%rcx"
-                     , "\tcmpq\t%rax, %rcx"
-                     , "\tmovq\t$0, %rax"
-                     , "\tsetne\t%al"
-                     ]
+instance Compile Expression where
+    compile (Int32 value) = Compiler $ do
+        return [ "\tmovq\t$" ++ show value ++ ", %rax" ]
+    compile (UnaryExpression Negation exp) = Compiler $ do
+        exp' <- runCompiler $ compile exp
+        return $ exp' ++ [ "\tnegq\t%rax" ]
+    compile (UnaryExpression BitwiseComplement exp) = Compiler $ do
+        exp' <- runCompiler $ compile exp
+        return $ exp' ++ [ "\tnotq\t%rax" ]
+    compile (UnaryExpression LogicalNegation exp) = Compiler $ do
+        exp' <- runCompiler $ compile exp
+        return $ exp'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsete\t%al"
+                 ]
+    compile (BinaryExpression exp1 Addition exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\taddq\t%rcx, %rax"
+                 ]
+    compile (BinaryExpression exp1 Subtraction exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp2'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp1'
+              ++ [ "\tpop\t%rcx"
+                 , "\tsubq\t%rcx, %rax"
+                 ]
+    compile (BinaryExpression exp1 Multiplication exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\timulq\t%rcx, %rax"
+                 ]
+    compile (BinaryExpression exp1 Division exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp2'
+              ++ ["\tpush\t%rax"]
+              ++ exp1'
+              ++ [ "\tcqto"
+                 , "\tpop\t%rcx"
+                 , "\tidivq\t%rcx"
+                 ]
+    compile (BinaryExpression exp1 LessThanEquals exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tcmpq\t%rax, %rcx"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetle\t%al"
+                 ]
+    compile (BinaryExpression exp1 GreaterThanEquals exp2) = Compiler $  do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tcmpq\t%rax, %rcx"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetge\t%al"
+                 ]
+    compile (BinaryExpression exp1 LessThan exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tcmpq\t%rax, %rcx"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetl\t%al"
+                 ]
+    compile (BinaryExpression exp1 GreaterThan exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tcmpq\t%rax, %rcx"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetg\t%al"
+                 ]
+    compile (BinaryExpression exp1 Equals exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tcmpq\t%rax, %rcx"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsete\t%al"
+                 ]
+    compile (BinaryExpression exp1 NotEquals exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ ["\tpush\t%rax"]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tcmpq\t%rax, %rcx"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetne\t%al"
+                 ]
 
 instance PrettyPrint Expression where
     prettyPrint (Int32 num) = text $ show num

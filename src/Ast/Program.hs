@@ -1,7 +1,7 @@
 module Ast.Program ( Program(..) ) where
 
-import Assembly ( Assembly(toAssembly) )
 import Ast.Function ( Function )
+import Compiler ( Compile(compile) )
 import Parser ( Parse(parse), parseSpaces )
 import Pretty ( PrettyPrint(prettyPrint) )
 
@@ -11,8 +11,8 @@ newtype Program = Program Function
 instance Parse Program where
     parse = Program <$> parse <* parseSpaces
 
-instance Assembly Program where
-    toAssembly opt (Program function) = toAssembly opt function
+instance Compile Program where
+    compile (Program function) = compile function
 
 instance PrettyPrint Program where
     prettyPrint (Program function) = prettyPrint function

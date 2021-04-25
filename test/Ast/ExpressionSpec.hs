@@ -8,6 +8,10 @@ import Text.PrettyPrint ( render )
 
 import Ast.Expression ( Expression(..) )
 import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
+import Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , executeCompiler
+                )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(prettyPrint) )
 
@@ -97,6 +101,9 @@ spec = do
                     exp2    = BinaryExpression (Int32 1) Addition exp1
                     exp3    = BinaryExpression exp2 Equals (Int32 4)
                 mResult `shouldBe` pure (exp3, read "")
+
+        -- describe "Compile" $ do
+        --     undefined
 
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do

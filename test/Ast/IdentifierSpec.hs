@@ -4,15 +4,17 @@ module Ast.IdentifierSpec ( spec ) where
 
 import Control.Applicative ( Alternative(empty) )
 import Control.Exception ( evaluate )
+import Data.Default ( def )
 import Test.Hspec
 import Text.PrettyPrint ( render )
 
-import Assembly ( OsOption(Darwin, Other)
-                , Option(Option)
-                , osOption
-                , toAssembly
-                )
 import Ast.Identifier ( Identifier, toIdentifier )
+import Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , Os(Darwin, Other)
+                , executeCompiler
+                , os
+                )
 import Parser ( Parse(parse), Parser, tryParser )
 import Pretty ( PrettyPrint(prettyPrint) )
 
@@ -73,16 +75,18 @@ spec = do
                 let mResult = tryParser (parse :: Parser Identifier) "aB_1$"
                 mResult `shouldBe` pure (toIdentifier "aB_1", read "$")
 
-        describe "Assembly" $ do
+        describe "Compile" $ do
             it "prefixes with an underscore on Darwin" $ do
-                let option   = Option { osOption = Darwin}
-                    assembly = toAssembly option (toIdentifier "main")
-                assembly `shouldBe` "_main"
+                let identifier = toIdentifier "main"
+                    state      = def { os = Darwin }
+                    assembly   = executeCompiler (compile identifier) state
+                assembly `shouldBe` pure ["_main"]
 
-            it "does not prefixes with an underscore on Other" $ do
-                let option   = Option { osOption = Other}
-                    assembly = toAssembly option (toIdentifier "main")
-                assembly `shouldBe` "main"
+            it "prefixes with an underscore on Other" $ do
+                let identifier = toIdentifier "main"
+                    state      = def { os = Other }
+                    assembly   = executeCompiler (compile identifier) state
+                assembly `shouldBe` pure ["main"]
 
         describe "PrettyPrint" $ do
             it "renders identifier" $ do

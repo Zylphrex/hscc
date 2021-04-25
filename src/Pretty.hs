@@ -1,6 +1,9 @@
 module Pretty where
 
-import Text.PrettyPrint ( Doc )
+import qualified Text.PrettyPrint
 
 class PrettyPrint a where
-    prettyPrint :: a -> Doc
+    render :: a -> String
+    render = Text.PrettyPrint.render . prettyPrint
+
+    prettyPrint :: a -> Text.PrettyPrint.Doc
