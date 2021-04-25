@@ -151,12 +151,12 @@ instance Compile Expression where
                  ]
     compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
-        exp2' <- runCompiler $ compile exp2
         s <- get
         let i = n s
-        put $ s { n = i + 1 }
         let rhs = "_rhs_and" ++ show i
             end = "_end_and" ++ show i
+        put $ s { n = i + 1 }
+        exp2' <- runCompiler $ compile exp2
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tjne " ++ rhs
@@ -171,12 +171,12 @@ instance Compile Expression where
                  ]
     compile (BinaryExpression exp1 LogicalOr exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
-        exp2' <- runCompiler $ compile exp2
         s <- get
         let i = n s
-        put $ s { n = i + 1 }
         let rhs = "_rhs_or" ++ show i
             end = "_end_or" ++ show i
+        put $ s { n = i + 1 }
+        exp2' <- runCompiler $ compile exp2
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ rhs
