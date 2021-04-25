@@ -6,7 +6,6 @@ import Control.Applicative ( Alternative(empty) )
 import Control.Exception ( evaluate )
 import Data.Default ( def )
 import Test.Hspec
-import Text.PrettyPrint ( render )
 
 import Ast.Identifier ( Identifier, toIdentifier )
 import Compiler ( Compiler(Compiler)
@@ -16,7 +15,7 @@ import Compiler ( Compiler(Compiler)
                 , os
                 )
 import Parser ( Parse(parse), Parser, tryParser )
-import Pretty ( PrettyPrint(prettyPrint) )
+import Pretty ( PrettyPrint(render) )
 
 spec :: Spec
 spec = do
@@ -91,4 +90,4 @@ spec = do
         describe "PrettyPrint" $ do
             it "renders identifier" $ do
                 let identifier = toIdentifier "main"
-                render (prettyPrint identifier) `shouldBe` "main"
+                render identifier `shouldBe` "main"

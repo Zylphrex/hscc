@@ -5,7 +5,6 @@ module Ast.ProgramSpec ( spec ) where
 import Control.Applicative ( Alternative(empty) )
 import Data.Default ( def )
 import Test.Hspec
-import Text.PrettyPrint ( render )
 
 -- import Assembly ( joinAssembly, toAssembly )
 import Ast.Expression ( Expression(..) )
@@ -17,7 +16,7 @@ import Ast.Statement ( Statement(..) )
 import Ast.Type ( Type(..) )
 import Compiler ( Compile(compile), executeCompiler)
 import Parser ( Parser, Parse(parse), tryParser )
-import Pretty ( PrettyPrint(prettyPrint) )
+import Pretty ( PrettyPrint(render) )
 
 spec :: Spec
 spec = do
@@ -329,4 +328,4 @@ spec = do
                         , "    body:"
                         , "        RETURN 124"
                         ]
-                render (prettyPrint program) `shouldBe` rendered
+                render program `shouldBe` rendered

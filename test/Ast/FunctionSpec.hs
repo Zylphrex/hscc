@@ -4,7 +4,6 @@ module Ast.FunctionSpec ( spec ) where
 
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
-import Text.PrettyPrint ( render )
 
 import Ast.Expression ( Expression(Int32) )
 import Ast.Function ( Function(..) )
@@ -12,7 +11,7 @@ import Ast.Identifier ( toIdentifier )
 import Ast.Statement ( Statement(..) )
 import Ast.Type ( Type(..) )
 import Parser ( Parser, Parse(parse), tryParser )
-import Pretty ( PrettyPrint(prettyPrint) )
+import Pretty ( PrettyPrint(render) )
 
 spec :: Spec
 spec = do
@@ -88,4 +87,4 @@ spec = do
                         , "    body:"
                         , "        RETURN 124"
                         ]
-                render (prettyPrint function) `shouldBe` rendered
+                render function `shouldBe` rendered
