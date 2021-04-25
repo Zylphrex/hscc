@@ -1,4 +1,11 @@
-module Compiler where
+module Compiler ( Compiler(Compiler)
+                , Compile(compile)
+                , Os(Darwin, Other)
+                , os
+                , runCompiler
+                , tryCompiler
+                , executeCompiler
+                ) where
 
 import Control.Applicative ( Alternative((<|>), empty) )
 import Control.Monad.State ( StateT(StateT)

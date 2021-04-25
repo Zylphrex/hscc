@@ -10,13 +10,12 @@ import System.IO ( readFile )
 import qualified System.Info
 
 import Ast.Program ( Program )
-import Compiler ( CompilerState(CompilerState)
-                , compile
+import Compiler ( compile
                 , executeCompiler
                 , Os(Darwin, Other)
                 , os
                 )
-import Parser ( executeParser, Parser(runParser), parse )
+import Parser ( executeParser, parse )
 import Pretty ( prettyPrint, render )
 
 osOption :: Os
