@@ -90,12 +90,23 @@ spec = do
                 let mResult = tryParser (parse :: Parser Expression) "1!=2"
                 mResult `shouldBe` pure (BinaryExpression (Int32 1) NotEquals (Int32 2), read "")
 
-            it "parse complex binary expression with relationals" $ do
-                let mResult = tryParser (parse :: Parser Expression) "1 + (2 > 3) == 4"
+            it "parses binary expression with logical and" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1&&2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) LogicalAnd (Int32 2), read "")
+
+            it "parses binary expression with logical or" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1||2"
+                mResult `shouldBe` pure (BinaryExpression (Int32 1) LogicalOr (Int32 2), read "")
+
+            it "parse complex binary expression with relationals and logicals" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1 + (2 > 3) == 4 && 5 <= 6 || 7"
                     exp1    = BinaryExpression (Int32 2) GreaterThan (Int32 3)
                     exp2    = BinaryExpression (Int32 1) Addition exp1
                     exp3    = BinaryExpression exp2 Equals (Int32 4)
-                mResult `shouldBe` pure (exp3, read "")
+                    exp4    = BinaryExpression (Int32 5) LessThanEquals (Int32 6)
+                    exp5    = BinaryExpression exp3 LogicalAnd exp4
+                    exp6    = BinaryExpression exp5 LogicalOr (Int32 7)
+                mResult `shouldBe` pure (exp6, read "")
 
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do

@@ -88,3 +88,9 @@ spec = do
 
                 it "should render not equals" $ do
                     render (prettyPrint NotEquals) `shouldBe` "!="
+
+                it "should render logical and" $ do
+                    render (prettyPrint LogicalAnd) `shouldBe` "&&"
+
+                it "should render logical or" $ do
+                    render (prettyPrint LogicalOr) `shouldBe` "||"
