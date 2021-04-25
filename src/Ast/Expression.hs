@@ -29,7 +29,7 @@ instance Parse Expression where
     parse = toExpression <$> (parse :: Parser RawExpression)
 
 instance Compile Expression where
-    compile (Int32 value) = Compiler $ do
+    compile (Int32 value) = Compiler $
         return [ "\tmovq\t$" ++ show value ++ ", %rax" ]
     compile (UnaryExpression Negation exp) = Compiler $ do
         exp' <- runCompiler $ compile exp

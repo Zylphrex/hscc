@@ -49,8 +49,8 @@ instance Compile Function where
     compile (Function returnType identifier arguments body) = Compiler $ do
         identifier' <- runCompiler $ compile identifier
         body' <- runCompiler $ compile body
-        return $ [ "\t.globl\t" ++ (head identifier')
-                 , (head identifier') ++ ":"
+        return $ [ "\t.globl\t" ++ head identifier'
+                 , head identifier' ++ ":"
                  ]
               ++ body'
 

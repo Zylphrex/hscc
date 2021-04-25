@@ -10,7 +10,7 @@ import Data.Default
 
 data Os = Darwin | Other deriving (Eq, Show)
 
-data CompilerState = CompilerState
+newtype CompilerState = CompilerState
     { os :: Os
     } deriving (Eq, Show)
 
@@ -25,7 +25,7 @@ class Compile a where
     compile :: a -> Compiler [String]
 
 tryCompiler :: Compiler a -> CompilerState -> Maybe (a, CompilerState)
-tryCompiler (Compiler c) s = runStateT c s
+tryCompiler (Compiler c) = runStateT c
 
 executeCompiler :: Compiler a -> CompilerState -> Maybe a
 executeCompiler c s = do
