@@ -1,6 +1,7 @@
 module Ast.Expression ( Expression(..) ) where
 
 import Control.Applicative ( Alternative((<|>), many) )
+import Control.Monad.State ( get, put )
 import Data.Char ( isDigit )
 import Data.Int ( Int32 )
 import Text.PrettyPrint ( char, parens, text )
@@ -9,6 +10,7 @@ import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , runCompiler
+                , n
                 )
 import Parser ( Parse(parse)
               , Parser
@@ -147,6 +149,47 @@ instance Compile Expression where
                  , "\tmovq\t$0, %rax"
                  , "\tsetne\t%al"
                  ]
+    compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        s <- get
+        let i = n s
+        let rhs = "_rhs_and" ++ show i
+            end = "_end_and" ++ show i
+        put $ s { n = i + 1 }
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tjne " ++ rhs
+                 , "\tjmp " ++ end
+                 , rhs ++ ":"
+                 ]
+              ++ exp2'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetne\t%al"
+                 , end ++ ":"
+                 ]
+    compile (BinaryExpression exp1 LogicalOr exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        s <- get
+        let i = n s
+        let rhs = "_rhs_or" ++ show i
+            end = "_end_or" ++ show i
+        put $ s { n = i + 1 }
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tje " ++ rhs
+                 , "\tmovq\t$1, %rax"
+                 , "\tjmp " ++ end
+                 , rhs ++ ":"
+                 ]
+              ++ exp2'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tmovq\t$0, %rax"
+                 , "\tsetne\t%al"
+                 , end ++ ":"
+                 ]
 
 instance PrettyPrint Expression where
     prettyPrint (Int32 num) = text $ show num
@@ -154,7 +197,39 @@ instance PrettyPrint Expression where
     prettyPrint (BinaryExpression exp1 op exp2) =
         parens $ prettyPrint exp1 <> prettyPrint op <> prettyPrint exp2
 
-type RawExpression = RawEqualityExpression
+type RawExpression = RawLogicalOrExpression
+
+data RawLogicalOrOperator = RawLogicalOr
+
+instance Parse RawLogicalOrOperator where
+    parse = RawLogicalOr <$ parseString "||"
+
+instance BinaryOp RawLogicalOrOperator where
+    toBinaryOperator RawLogicalOr = LogicalOr
+
+newtype RawLogicalOrExpression = RawLogicalOrExpression (RawExp RawLogicalAndExpression RawLogicalOrOperator)
+
+instance Parse RawLogicalOrExpression where
+    parse = RawLogicalOrExpression <$> parse
+
+instance Exp RawLogicalOrExpression where
+    toExpression (RawLogicalOrExpression t) = toExpression t
+
+data RawLogicalAndOperator = RawLogicalAnd
+
+instance Parse RawLogicalAndOperator where
+    parse = RawLogicalAnd <$ parseString "&&"
+
+instance BinaryOp RawLogicalAndOperator where
+    toBinaryOperator RawLogicalAnd = LogicalAnd
+
+newtype RawLogicalAndExpression = RawLogicalAndExpression (RawExp RawEqualityExpression RawLogicalAndOperator)
+
+instance Parse RawLogicalAndExpression where
+    parse = RawLogicalAndExpression <$> parse
+
+instance Exp RawLogicalAndExpression where
+    toExpression (RawLogicalAndExpression t) = toExpression t
 
 data RawEqualityOperator = RawEquals | RawNotEquals
 

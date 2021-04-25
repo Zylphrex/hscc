@@ -314,6 +314,55 @@ spec = do
                                          , "\tretq"
                                          ]
 
+            it "translates programs with logical and" $ do
+                let expression = BinaryExpression (Int32 0) LogicalAnd (Int32 1)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tjne _rhs_and0"
+                                         , "\tjmp _end_and0"
+                                         , "_rhs_and0:"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tsetne\t%al"
+                                         , "_end_and0:"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with logical or" $ do
+                let expression = BinaryExpression (Int32 0) LogicalOr (Int32 1)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = Return expression
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _rhs_or0"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tjmp _end_or0"
+                                         , "_rhs_or0:"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tsetne\t%al"
+                                         , "_end_or0:"
+                                         , "\tretq"
+                                         ]
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int
