@@ -8,8 +8,7 @@ import Data.Default ( def )
 import Test.Hspec
 
 import Ast.Identifier ( Identifier, toIdentifier )
-import Compiler ( Compiler(Compiler)
-                , Compile(compile)
+import Compiler ( Compile(compile)
                 , Os(Darwin, Other)
                 , executeCompiler
                 , os

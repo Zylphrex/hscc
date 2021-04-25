@@ -1,4 +1,14 @@
-module Parser where
+module Parser ( Parser
+              , Parse(parse)
+              , parseIf
+              , parseCharacter
+              , parseString
+              , parseWhile
+              , parseSpaces
+              , parseNotNull
+              , tryParser
+              , executeParser
+              ) where
 
 import Control.Applicative ( Alternative((<|>), empty) )
 import Control.Monad.State ( StateT(StateT)
