@@ -21,12 +21,12 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                 returnType function `shouldBe` Int
                 identifier function `shouldBe` toIdentifier "main"
                 arguments function `shouldBe` ()
-                body function `shouldBe` Return (Int32 124)
+                body function `shouldBe` [Return (Int32 124)]
 
         describe "Parse" $ do
             it "fails to parse empty function" $ do
@@ -70,7 +70,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                 mResult `shouldBe` pure (function, read "")
 
@@ -79,7 +79,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
                         [ "FUN INT main:"
