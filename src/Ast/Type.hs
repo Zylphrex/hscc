@@ -1,4 +1,4 @@
-module Ast.Type ( Type(..) ) where
+module Ast.Type ( Type(..), bytes ) where
 
 import Text.PrettyPrint ( text )
 
@@ -13,3 +13,6 @@ instance Parse Type where
 
 instance PrettyPrint Type where
     prettyPrint Int = text "INT"
+
+bytes :: Type -> Int
+bytes Int = 8

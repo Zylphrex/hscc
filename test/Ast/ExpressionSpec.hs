@@ -18,10 +18,6 @@ spec = do
                 let mResult = tryParser (parse :: Parser Expression) ""
                 mResult `shouldBe` empty
 
-            it "fails to parse bad expression" $ do
-                let mResult = tryParser (parse :: Parser Expression) "cccc"
-                mResult `shouldBe` empty
-
             it "parses integer expression" $ do
                 let mResult = tryParser (parse :: Parser Expression) "123"
                 mResult `shouldBe` pure (Int32 123, read "")

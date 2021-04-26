@@ -9,7 +9,7 @@ newtype Program = Program Function
     deriving (Eq, Show)
 
 instance Parse Program where
-    parse = Program <$> parse <* parseSpaces
+    parse = Program <$> (parseSpaces *> parse <* parseSpaces)
 
 instance Compile Program where
     compile (Program function) = compile function
