@@ -31,7 +31,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                     program = Program function
                 mResult `shouldBe` pure (program, read "")
@@ -41,7 +41,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                     program = Program function
                 mResult `shouldBe` pure (program, read "ccc")
@@ -51,7 +51,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -66,7 +66,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -82,7 +82,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -98,7 +98,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -116,7 +116,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -135,7 +135,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -154,7 +154,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -173,7 +173,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -193,7 +193,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -214,7 +214,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -235,7 +235,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -256,7 +256,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -277,7 +277,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -298,7 +298,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -319,7 +319,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -343,7 +343,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return expression
+                                        , body       = [Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -368,7 +368,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = Return $ Int32 124
+                                        , body       = [Return $ Int32 124]
                                         }
                     program = Program function
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines

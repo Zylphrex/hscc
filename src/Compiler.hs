@@ -28,6 +28,13 @@ newtype Compiler a = Compiler
     { runCompiler :: StateT CompilerState Maybe a
     }
 
+instance Functor Compiler where
+    f `fmap` (Compiler c) = Compiler $ f <$> c
+
+instance Applicative Compiler where
+    pure x = Compiler $ pure x
+    (Compiler ac) <*> (Compiler c) = Compiler $ ac <*> c
+
 class Compile a where
     compile :: a -> Compiler [String]
 

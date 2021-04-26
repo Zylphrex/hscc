@@ -1,8 +1,9 @@
 module Ast.Function ( Function(..) ) where
 
+import Control.Applicative ( many )
 import Data.Char ( isDigit, isLetter )
 import Data.Functor (($>))
-import Text.PrettyPrint ( colon, empty, nest, parens, space, text, ($$) )
+import Text.PrettyPrint ( colon, empty, nest, parens, sep, space, text, ($$) )
 
 import Ast.Identifier ( Identifier )
 import Ast.Statement ( Statement )
@@ -24,7 +25,7 @@ import Pretty ( PrettyPrint(prettyPrint) )
 data Function = Function { returnType :: Type
                          , identifier :: Identifier
                          , arguments  :: ()
-                         , body       :: Statement
+                         , body       :: [Statement]
                          } deriving (Eq, Show)
 
 instance Parse Function where
@@ -39,25 +40,23 @@ instance Parse Function where
                          <* parseSpaces
                          )
                      <*> (  parseCharacter '{'
-                         *> parseSpaces
-                         *> parse
-                         <* parseSpaces
+                         *> parseNotNull (many (parseSpaces *> parse <* parseSpaces))
                          <* parseCharacter '}'
                          )
 
 instance Compile Function where
     compile (Function returnType identifier arguments body) = Compiler $ do
         identifier' <- runCompiler $ compile identifier
-        body' <- runCompiler $ compile body
-        return $ [ "\t.globl\t" ++ head identifier'
-                 , head identifier' ++ ":"
-                 ]
-              ++ body'
+        body' <- runCompiler $ traverse compile body
+        return $ concat $ [ "\t.globl\t" ++ head identifier'
+                          , head identifier' ++ ":"
+                          ]
+                        : body'
 
 instance PrettyPrint Function where
     prettyPrint (Function returnType identifier arguments body) =
       text "FUN" <> space <> prettyPrint returnType <> space <> prettyPrint identifier <> colon $$
       nest 4 (
           (text "params" <> colon <> space <> parens empty) $$
-          (text "body" <> colon $$ nest 4 (prettyPrint body))
+          (text "body" <> colon $$ nest 4 (sep (prettyPrint <$> body)))
       )
