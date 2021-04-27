@@ -1,5 +1,6 @@
-module Ast.Identifier ( Identifier, toIdentifier ) where
+module Ast.Identifier ( Identifier, fromIdentifier, toIdentifier ) where
 
+import Control.Applicative ( empty )
 import Control.Monad.State ( get )
 import Data.Char ( isDigit, isLetter )
 import Text.PrettyPrint ( text )
@@ -18,13 +19,22 @@ import Pretty ( PrettyPrint(prettyPrint) )
 newtype Identifier = Identifier String
     deriving (Eq, Show)
 
+fromIdentifier :: Identifier -> String
+fromIdentifier (Identifier s) = s
+
 toIdentifier :: String -> Identifier
 toIdentifier s = if isValidIdentifier s
                  then Identifier s
                  else error $ s ++ " is not a valid identifier"
 
 instance Parse Identifier where
-    parse = toIdentifier <$> ((:) <$> parseIf isLeadingChar <*> parseWhile isIdentifierChar)
+    parse = do
+        c  <- parseIf isLeadingChar
+        cs <- parseWhile isIdentifierChar
+        let identifier = c:cs
+        if isValidIdentifier identifier
+        then return $ Identifier identifier
+        else empty
 
 instance Compile Identifier where
     compile (Identifier identifier) = Compiler $ do
@@ -44,6 +54,11 @@ isIdentifierChar :: Char -> Bool
 isIdentifierChar c = c == '_' || isLetter c || isDigit c
 
 isValidIdentifier :: String -> Bool
-isValidIdentifier [c]    = isLeadingChar c
-isValidIdentifier (c:cs) = isLeadingChar c && all isIdentifierChar cs
-isValidIdentifier []     = False
+isValidIdentifier [c]               = isLeadingChar c
+isValidIdentifier identifier@(c:cs) =  isLeadingChar c
+                                    && all isIdentifierChar cs
+                                    && identifier `notElem` reserved
+isValidIdentifier []                = False
+
+reserved :: [String]
+reserved = ["int", "return"]

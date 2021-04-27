@@ -1,16 +1,19 @@
 module Ast.Function ( Function(..) ) where
 
-import Control.Applicative ( many )
+import Control.Applicative ( Alternative((<|>)), many )
+import Control.Monad.State ( get, put )
 import Data.Char ( isDigit, isLetter )
 import Data.Functor (($>))
-import Text.PrettyPrint ( colon, empty, nest, parens, sep, space, text, ($$) )
+import Text.PrettyPrint ( colon, empty, nest, parens, space, text, vcat, ($$) )
 
 import Ast.Identifier ( Identifier )
-import Ast.Statement ( Statement )
+import Ast.Expression ( Expression(Int32) )
+import Ast.Statement ( Statement(Return) )
 import Ast.Type ( Type )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , runCompiler
+                , stackIndex
                 )
 import Parser ( Parse(parse)
               , Parser
@@ -29,7 +32,7 @@ data Function = Function { returnType :: Type
                          } deriving (Eq, Show)
 
 instance Parse Function where
-    parse = Function <$> (parseSpaces *> parse)
+    parse = Function <$> parse
                      <*> (parseNotNull parseSpaces *> parse)
                      <*> (  parseSpaces
                          *> parseCharacter '('
@@ -40,16 +43,28 @@ instance Parse Function where
                          <* parseSpaces
                          )
                      <*> (  parseCharacter '{'
-                         *> parseNotNull (many (parseSpaces *> parse <* parseSpaces))
+                         *> ( parseNotNull (many (parseSpaces *> parse <* parseSpaces))
+                          <|> parseSpaces $> [Return $ Int32 0]
+                            )
                          <* parseCharacter '}'
                          )
 
 instance Compile Function where
     compile (Function returnType identifier arguments body) = Compiler $ do
+        -- set the stack index to 0 when entering a function
+        state <- get
+        put $ state { stackIndex = 0}
         identifier' <- runCompiler $ compile identifier
         body' <- runCompiler $ traverse compile body
+        -- restore the stack frame and index when exiting a function
+        put state
         return $ concat $ [ "\t.globl\t" ++ head identifier'
                           , head identifier' ++ ":"
+                          -- save the stackframe base pointer
+                          , "\tpush\t%rbp"
+                          -- update the stackframe base pointer
+                          -- to the current stackframe pointer
+                          , "\tmovq\t%rsp, %rbp"
                           ]
                         : body'
 
@@ -58,5 +73,5 @@ instance PrettyPrint Function where
       text "FUN" <> space <> prettyPrint returnType <> space <> prettyPrint identifier <> colon $$
       nest 4 (
           (text "params" <> colon <> space <> parens empty) $$
-          (text "body" <> colon $$ nest 4 (sep (prettyPrint <$> body)))
+          (text "body" <> colon $$ nest 4 (vcat (prettyPrint <$> body)))
       )

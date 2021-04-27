@@ -49,10 +49,6 @@ spec = do
                 let mResult = tryParser (parse :: Parser Function) "int main () return 123;"
                 mResult `shouldBe` empty
 
-            it "fails to parse function without body" $ do
-                let mResult = tryParser (parse :: Parser Function) "int main () {}"
-                mResult `shouldBe` empty
-
             it "fails to parse function with bad identifier" $ do
                 let mResult = tryParser (parse :: Parser Function) "int 1main () {}"
                 mResult `shouldBe` empty
@@ -71,6 +67,15 @@ spec = do
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
                                         , body       = [Return $ Int32 124]
+                                        }
+                mResult `shouldBe` pure (function, read "")
+
+            it "parses function without body" $ do
+                let mResult = tryParser (parse :: Parser Function) "int main () {}"
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return $ Int32 0]
                                         }
                 mResult `shouldBe` pure (function, read "")
 

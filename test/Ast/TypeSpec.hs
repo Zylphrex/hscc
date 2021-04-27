@@ -6,7 +6,7 @@ import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
 import Text.PrettyPrint ( render )
 
-import Ast.Type ( Type(..) )
+import Ast.Type ( Type(..), bytes )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(prettyPrint) )
 
@@ -33,3 +33,7 @@ spec = do
         describe "PrettyPrint" $ do
             it "should render int type" $ do
                 render (prettyPrint Int) `shouldBe` "INT"
+
+        describe "bytes" $ do
+            it "should return the correct size in bytes" $ do
+                bytes Int `shouldBe` 8

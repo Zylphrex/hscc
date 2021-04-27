@@ -32,6 +32,10 @@ spec = do
             it "rejects identifiers starting with digit" $ do
                 evaluate (toIdentifier "1") `shouldThrow` anyException
 
+            it "rejects identifiers if they are reserved keywords" $ do
+                evaluate (toIdentifier "int") `shouldThrow` anyException
+                evaluate (toIdentifier "return") `shouldThrow` anyException
+
         describe "Parse" $ do
             it "fails when identifier is blank" $ do
                 let mResult = tryParser (parse :: Parser Identifier) ""

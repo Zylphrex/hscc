@@ -1,17 +1,22 @@
 module Ast.Expression ( Expression(..) ) where
 
 import Control.Applicative ( Alternative((<|>), many) )
+import Control.Monad ( when )
 import Control.Monad.State ( get, put )
 import Data.Char ( isDigit )
 import Data.Int ( Int32 )
-import Text.PrettyPrint ( char, parens, text )
+import Data.Maybe ( fromJust, isNothing )
+import Text.PrettyPrint ( char, equals, parens, space, text )
 
 import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , runCompiler
                 , n
+                , stackFrame
+                , getOffset
                 )
+import Ast.Identifier ( Identifier, fromIdentifier )
 import Parser ( Parse(parse)
               , Parser
               , parseCharacter
@@ -25,6 +30,8 @@ import Pretty ( PrettyPrint(prettyPrint) )
 data Expression = Int32 Int32
                 | UnaryExpression UnaryOperator Expression
                 | BinaryExpression Expression BinaryOperator Expression
+                | Assignment Identifier Expression
+                | Variable Identifier
     deriving (Eq, Show)
 
 instance Parse Expression where
@@ -151,12 +158,12 @@ instance Compile Expression where
                  ]
     compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
         s <- get
         let i = n s
         let rhs = "_rhs_and" ++ show i
             end = "_end_and" ++ show i
         put $ s { n = i + 1 }
-        exp2' <- runCompiler $ compile exp2
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tjne " ++ rhs
@@ -171,12 +178,12 @@ instance Compile Expression where
                  ]
     compile (BinaryExpression exp1 LogicalOr exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
         s <- get
         let i = n s
         let rhs = "_rhs_or" ++ show i
             end = "_end_or" ++ show i
         put $ s { n = i + 1 }
-        exp2' <- runCompiler $ compile exp2
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ rhs
@@ -190,14 +197,58 @@ instance Compile Expression where
                  , "\tsetne\t%al"
                  , end ++ ":"
                  ]
+    compile (Assignment identifier exp) = Compiler $ do
+        state <- get
+        let identifier' = fromIdentifier identifier
+            stackFrame' = stackFrame state
+            stackOffset = getOffset identifier' stackFrame'
+        when (isNothing stackOffset)
+             (fail $ "Variable: " ++ identifier' ++ " is not declared")
+        exp' <- runCompiler $ compile exp
+        return $ exp'
+              ++ [ "\tmovq\t%rax, " ++ show (fromJust stackOffset) ++ "(%rbp)" ]
+    compile (Variable identifier) = Compiler $ do
+        state <- get
+        let identifier' = fromIdentifier identifier
+            stackFrame' = stackFrame state
+            stackOffset = getOffset identifier' stackFrame'
+        when (isNothing stackOffset)
+             (fail $ "Variable: " ++ identifier' ++ " is not declared")
+        return [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
 
 instance PrettyPrint Expression where
     prettyPrint (Int32 num) = text $ show num
     prettyPrint (UnaryExpression op exp) = prettyPrint op <> prettyPrint exp
     prettyPrint (BinaryExpression exp1 op exp2) =
         parens $ prettyPrint exp1 <> prettyPrint op <> prettyPrint exp2
+    prettyPrint (Assignment identifier exp) =
+        prettyPrint identifier <> space <> equals <> space <> prettyPrint exp
+    prettyPrint (Variable identifier) = prettyPrint identifier
 
-type RawExpression = RawLogicalOrExpression
+data RawExpression = RawAssignnmentExpressionWrapper RawAssignmentExpression
+                   | RawLogicalOrExpressionWrapper RawLogicalOrExpression
+
+instance Parse RawExpression where
+    parse = RawAssignnmentExpressionWrapper <$> parse
+        <|> RawLogicalOrExpressionWrapper <$> parse
+
+instance Exp RawExpression where
+    toExpression (RawAssignnmentExpressionWrapper exp) = toExpression exp
+    toExpression (RawLogicalOrExpressionWrapper exp)  = toExpression exp
+
+data RawAssignmentExpression = RawAssignmentExpression Identifier RawExpression
+
+instance Parse RawAssignmentExpression where
+    parse = RawAssignmentExpression <$> parse
+                                    <*> (  parseSpaces
+                                        *> parseCharacter '='
+                                        *> parseSpaces
+                                        *> parse
+                                        <* parseSpaces
+                                        )
+
+instance Exp RawAssignmentExpression where
+    toExpression (RawAssignmentExpression v exp) = Assignment v $ toExpression exp
 
 data RawLogicalOrOperator = RawLogicalOr
 
@@ -313,6 +364,7 @@ instance Exp RawTerm where
 data RawFactor = RawFactor RawExpression
                | UnaryRawFactor UnaryOperator RawFactor
                | IntegerRawFactor Int32
+               | VariableRawFactor Identifier
 
 instance Parse RawFactor where
     parse = RawFactor <$> (  parseCharacter '('
@@ -323,11 +375,13 @@ instance Parse RawFactor where
                           )
         <|> UnaryRawFactor <$> parse <*> parse
         <|> IntegerRawFactor <$> (read <$> parseNotNull (parseWhile isDigit))
+        <|> VariableRawFactor <$> parse
 
 instance Exp RawFactor where
     toExpression (RawFactor exp)       = toExpression exp
     toExpression (UnaryRawFactor op f) = UnaryExpression op $ toExpression f
     toExpression (IntegerRawFactor x)  = Int32 x
+    toExpression (VariableRawFactor v) = Variable v
 
 data RawExp t o = RawExp t [(o, t)]
 
