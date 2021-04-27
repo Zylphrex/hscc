@@ -427,6 +427,65 @@ spec = do
                                          , "\tretq"
                                          ]
 
+            it "translates programs with variables" $ do
+                let a          = toIdentifier "a"
+                    b          = toIdentifier "b"
+                    statement1 = Declaration Int a Nothing
+                    statement2 = Expression $ Assignment a $ Int32 1
+                    statement3 = Declaration Int b $ Just $ Int32 2
+                    statement4 = Return $ BinaryExpression (Variable a) Addition (Variable b)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ statement1
+                                                       , statement2
+                                                       , statement3
+                                                       , statement4
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-16(%rbp), %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\taddq\t%rcx, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "fails to translate program with invalid assignment" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ Expression $ Assignment (toIdentifier "a") (Int32 1)
+                                                       , Return $ Int32 1
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
+
+            it "fails to translate program with invalid variable" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ Return $ Variable $ toIdentifier "a" ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int

@@ -145,5 +145,5 @@ spec = do
 
             it "should render assignment expression" $ do
                 let expression1 = BinaryExpression (Int32 124) Addition (Int32 456)
-                    expression2 = Assignment (toIdentifier "x") $ expression1
+                    expression2 = Assignment (toIdentifier "x") expression1
                 render expression2 `shouldBe` "x = (124+456)"
