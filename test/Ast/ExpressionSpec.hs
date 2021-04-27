@@ -6,6 +6,7 @@ import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
 
 import Ast.Expression ( Expression(..) )
+import Ast.Identifier ( toIdentifier )
 import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(render) )
@@ -104,6 +105,20 @@ spec = do
                     exp6    = BinaryExpression exp5 LogicalOr (Int32 7)
                 mResult `shouldBe` pure (exp6, read "")
 
+            it "parses variable expression" $ do
+                let mResult = tryParser (parse :: Parser Expression) "x"
+                mResult `shouldBe` pure (Variable (toIdentifier "x"), read "")
+
+            it "parses variable expression and leaves the rest" $ do
+                let mResult = tryParser (parse :: Parser Expression) "x 123"
+                mResult `shouldBe` pure (Variable (toIdentifier "x"), read " 123")
+
+            it "parses assignment expression" $ do
+                let mResult = tryParser (parse :: Parser Expression) "x = 1 * (2 + 3)"
+                    exp1 = BinaryExpression (Int32 2) Addition (Int32 3)
+                    exp2 = BinaryExpression (Int32 1) Multiplication exp1
+                mResult `shouldBe` pure (Assignment (toIdentifier "x") exp2, read "")
+
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do
                 let expression = Int32 124
@@ -123,3 +138,12 @@ spec = do
                     expression3 = BinaryExpression expression2 Division (Int32 2)
                     expression4 = BinaryExpression (Int32 1) Addition expression3
                 render expression4 `shouldBe` "(1+((4*(3-1))/2))"
+
+            it "should render variable expression" $ do
+                let expression = Variable $ toIdentifier "x"
+                render expression `shouldBe` "x"
+
+            it "should render assignment expression" $ do
+                let expression1 = BinaryExpression (Int32 124) Addition (Int32 456)
+                    expression2 = Assignment (toIdentifier "x") $ expression1
+                render expression2 `shouldBe` "x = (124+456)"
