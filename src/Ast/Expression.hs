@@ -158,12 +158,12 @@ instance Compile Expression where
                  ]
     compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
         s <- get
         let i = n s
         let rhs = "_rhs_and" ++ show i
             end = "_end_and" ++ show i
         put $ s { n = i + 1 }
-        exp2' <- runCompiler $ compile exp2
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tjne " ++ rhs
@@ -178,12 +178,12 @@ instance Compile Expression where
                  ]
     compile (BinaryExpression exp1 LogicalOr exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
         s <- get
         let i = n s
         let rhs = "_rhs_or" ++ show i
             end = "_end_or" ++ show i
         put $ s { n = i + 1 }
-        exp2' <- runCompiler $ compile exp2
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ rhs
@@ -214,7 +214,7 @@ instance Compile Expression where
             stackOffset = getOffset identifier' stackFrame'
         when (isNothing stackOffset)
              (fail $ "Variable: " ++ identifier' ++ " is not declared")
-        return $ [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
+        return [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
 
 instance PrettyPrint Expression where
     prettyPrint (Int32 num) = text $ show num

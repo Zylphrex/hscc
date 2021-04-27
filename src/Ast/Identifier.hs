@@ -57,7 +57,7 @@ isValidIdentifier :: String -> Bool
 isValidIdentifier [c]               = isLeadingChar c
 isValidIdentifier identifier@(c:cs) =  isLeadingChar c
                                     && all isIdentifierChar cs
-                                    && not (identifier `elem` reserved)
+                                    && identifier `notElem` reserved
 isValidIdentifier []                = False
 
 reserved :: [String]

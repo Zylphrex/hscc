@@ -62,7 +62,7 @@ instance Parse DeclarationWithExp where
 
 toStatement :: DeclarationWithExp -> Statement
 toStatement (DeclarationWithExp t i e) = Declaration t i $ Just e
-toStatement (DeclarationWithoutExp t i) = Declaration t i $ Nothing
+toStatement (DeclarationWithoutExp t i) = Declaration t i Nothing
 
 instance Compile Statement where
     compile (Return expression) = Compiler $ do
@@ -103,7 +103,7 @@ instance PrettyPrint Statement where
          prettyPrint variableType
       <> space
       <> text (fromIdentifier identifier)
-      <> if (isJust mExpression)
+      <> if isJust mExpression
          then  space
             <> equals
             <> space
