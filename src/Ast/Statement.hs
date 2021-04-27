@@ -32,7 +32,7 @@ data Statement = Return Expression
 
 instance Parse Statement where
     parse = Return <$> (  parseString "return"
-                       *> parseSpaces
+                       *> parseNotNull parseSpaces
                        *> parse
                        <* parseSpaces
                        <* parseCharacter ';'
@@ -94,7 +94,7 @@ instance Compile Statement where
         if hasExpression
         then return $ expression'
                    ++ [ "\tpush\t%rax" ]
-        else return []
+        else return $ [ "\tpush\t%rax" ]
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression

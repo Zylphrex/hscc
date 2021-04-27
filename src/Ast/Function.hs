@@ -1,13 +1,14 @@
 module Ast.Function ( Function(..) ) where
 
+import Control.Applicative ( Alternative((<|>)), many )
 import Control.Monad.State ( get, put )
-import Control.Applicative ( many )
 import Data.Char ( isDigit, isLetter )
 import Data.Functor (($>))
 import Text.PrettyPrint ( colon, empty, nest, parens, space, text, vcat, ($$) )
 
 import Ast.Identifier ( Identifier )
-import Ast.Statement ( Statement )
+import Ast.Expression ( Expression(Int32) )
+import Ast.Statement ( Statement(Return) )
 import Ast.Type ( Type )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
@@ -42,7 +43,9 @@ instance Parse Function where
                          <* parseSpaces
                          )
                      <*> (  parseCharacter '{'
-                         *> parseNotNull (many (parseSpaces *> parse <* parseSpaces))
+                         *> ( parseNotNull (many (parseSpaces *> parse <* parseSpaces))
+                          <|> parseSpaces $> [Return $ Int32 0]
+                            )
                          <* parseCharacter '}'
                          )
 
