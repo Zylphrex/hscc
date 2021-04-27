@@ -94,7 +94,7 @@ instance Compile Statement where
         if hasExpression
         then return $ expression'
                    ++ [ "\tpush\t%rax" ]
-        else return $ [ "\tpush\t%rax" ]
+        else return [ "\tpush\t%rax" ]
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
