@@ -486,6 +486,19 @@ spec = do
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
+            it "fails to translate program redeclaring a variable" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ Declaration Int (toIdentifier "a") Nothing
+                                                       , Declaration Int (toIdentifier "a") Nothing
+                                                       , Return $ Int32 1
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int

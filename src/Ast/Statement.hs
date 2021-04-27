@@ -85,7 +85,7 @@ instance Compile Statement where
             stackFrame' = stackFrame state
             stackIndex' = stackIndex state
         when (isDeclared identifier' stackFrame')
-             (fail $ "Variable: " ++ identifier' ++ " is not declared")
+             (fail $ "Variable: " ++ identifier' ++ " is already declared")
         let stackIndex'' = stackIndex' - bytes variableType
             stackFrame'' = pushFrame (identifier', stackIndex'') stackFrame'
         put $ state { stackFrame = stackFrame''
