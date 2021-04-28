@@ -7,7 +7,7 @@ import Data.Functor (($>))
 import Text.PrettyPrint ( colon, empty, nest, parens, space, text, vcat, ($$) )
 
 import Ast.Identifier ( Identifier )
-import Ast.Expression ( Expression(Int32) )
+import Ast.Expression ( Expression(Int64) )
 import Ast.Statement ( Statement(Return) )
 import Ast.Type ( Type )
 import Compiler ( Compiler(Compiler)
@@ -44,7 +44,7 @@ instance Parse Function where
                          )
                      <*> (  parseCharacter '{'
                          *> ( parseNotNull (many (parseSpaces *> parse <* parseSpaces))
-                          <|> parseSpaces $> [Return $ Int32 0]
+                          <|> parseSpaces $> [Return $ Int64 0]
                             )
                          <* parseCharacter '}'
                          )

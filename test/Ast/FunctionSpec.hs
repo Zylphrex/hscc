@@ -5,7 +5,7 @@ module Ast.FunctionSpec ( spec ) where
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
 
-import Ast.Expression ( Expression(Int32) )
+import Ast.Expression ( Expression(Int64) )
 import Ast.Function ( Function(..) )
 import Ast.Identifier ( toIdentifier )
 import Ast.Statement ( Statement(..) )
@@ -21,12 +21,12 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                 returnType function `shouldBe` Int
                 identifier function `shouldBe` toIdentifier "main"
                 arguments function `shouldBe` ()
-                body function `shouldBe` [Return (Int32 124)]
+                body function `shouldBe` [Return (Int64 124)]
 
         describe "Parse" $ do
             it "fails to parse empty function" $ do
@@ -66,7 +66,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                 mResult `shouldBe` pure (function, read "")
 
@@ -75,7 +75,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 0]
+                                        , body       = [Return $ Int64 0]
                                         }
                 mResult `shouldBe` pure (function, read "")
 
@@ -84,7 +84,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
                         [ "FUN INT main:"
