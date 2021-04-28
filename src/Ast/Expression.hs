@@ -4,7 +4,7 @@ import Control.Applicative ( Alternative((<|>), many) )
 import Control.Monad ( when )
 import Control.Monad.State ( get, put )
 import Data.Char ( isDigit )
-import Data.Int ( Int32 )
+import Data.Int ( Int64 )
 import Data.Maybe ( fromJust, isNothing )
 import Text.PrettyPrint ( char, equals, parens, space, text )
 
@@ -27,7 +27,7 @@ import Parser ( Parse(parse)
               )
 import Pretty ( PrettyPrint(prettyPrint) )
 
-data Expression = Int32 Int32
+data Expression = Int64 Int64
                 | UnaryExpression UnaryOperator Expression
                 | BinaryExpression Expression BinaryOperator Expression
                 | Assignment Identifier Expression
@@ -38,7 +38,7 @@ instance Parse Expression where
     parse = toExpression <$> (parse :: Parser RawExpression)
 
 instance Compile Expression where
-    compile (Int32 value) = Compiler $
+    compile (Int64 value) = Compiler $
         return [ "\tmovq\t$" ++ show value ++ ", %rax" ]
     compile (UnaryExpression Negation exp) = Compiler $ do
         exp' <- runCompiler $ compile exp
@@ -217,7 +217,7 @@ instance Compile Expression where
         return [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
 
 instance PrettyPrint Expression where
-    prettyPrint (Int32 num) = text $ show num
+    prettyPrint (Int64 num) = text $ show num
     prettyPrint (UnaryExpression op exp) = prettyPrint op <> prettyPrint exp
     prettyPrint (BinaryExpression exp1 op exp2) =
         parens $ prettyPrint exp1 <> prettyPrint op <> prettyPrint exp2
@@ -363,7 +363,7 @@ instance Exp RawTerm where
 
 data RawFactor = RawFactor RawExpression
                | UnaryRawFactor UnaryOperator RawFactor
-               | IntegerRawFactor Int32
+               | IntegerRawFactor Int64
                | VariableRawFactor Identifier
 
 instance Parse RawFactor where
@@ -380,7 +380,7 @@ instance Parse RawFactor where
 instance Exp RawFactor where
     toExpression (RawFactor exp)       = toExpression exp
     toExpression (UnaryRawFactor op f) = UnaryExpression op $ toExpression f
-    toExpression (IntegerRawFactor x)  = Int32 x
+    toExpression (IntegerRawFactor x)  = Int64 x
     toExpression (VariableRawFactor v) = Variable v
 
 data RawExp t o = RawExp t [(o, t)]

@@ -31,7 +31,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                     program = Program function
                 mResult `shouldBe` pure (program, read "")
@@ -41,7 +41,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                     program = Program function
                 mResult `shouldBe` pure (program, read "ccc")
@@ -51,7 +51,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -66,7 +66,7 @@ spec = do
                                          ]
 
             it "translates programs with negation" $ do
-                let expression = UnaryExpression Negation $ Int32 124
+                let expression = UnaryExpression Negation $ Int64 124
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -86,7 +86,7 @@ spec = do
                                          ]
 
             it "translates programs with bitwise complement" $ do
-                let expression = UnaryExpression BitwiseComplement $ Int32 124
+                let expression = UnaryExpression BitwiseComplement $ Int64 124
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -106,7 +106,7 @@ spec = do
                                          ]
 
             it "translates programs with logical negation" $ do
-                let expression = UnaryExpression LogicalNegation $ Int32 124
+                let expression = UnaryExpression LogicalNegation $ Int64 124
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -128,7 +128,7 @@ spec = do
                                          ]
 
             it "translates programs with addition" $ do
-                let expression = BinaryExpression (Int32 4) Addition (Int32 2)
+                let expression = BinaryExpression (Int64 4) Addition (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -151,7 +151,7 @@ spec = do
                                          ]
 
             it "translates programs with subtraction" $ do
-                let expression = BinaryExpression (Int32 4) Subtraction (Int32 2)
+                let expression = BinaryExpression (Int64 4) Subtraction (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -174,7 +174,7 @@ spec = do
                                          ]
 
             it "translates programs with multiplication" $ do
-                let expression = BinaryExpression (Int32 4) Multiplication (Int32 2)
+                let expression = BinaryExpression (Int64 4) Multiplication (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -197,7 +197,7 @@ spec = do
                                          ]
 
             it "translates programs with division" $ do
-                let expression = BinaryExpression (Int32 4) Division (Int32 2)
+                let expression = BinaryExpression (Int64 4) Division (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -221,7 +221,7 @@ spec = do
                                          ]
 
             it "translates programs with less than equals" $ do
-                let expression = BinaryExpression (Int32 4) LessThanEquals (Int32 2)
+                let expression = BinaryExpression (Int64 4) LessThanEquals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -246,7 +246,7 @@ spec = do
                                          ]
 
             it "translates programs with greater than equals" $ do
-                let expression = BinaryExpression (Int32 4) GreaterThanEquals (Int32 2)
+                let expression = BinaryExpression (Int64 4) GreaterThanEquals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -271,7 +271,7 @@ spec = do
                                          ]
 
             it "translates programs with less than" $ do
-                let expression = BinaryExpression (Int32 4) LessThan (Int32 2)
+                let expression = BinaryExpression (Int64 4) LessThan (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -296,7 +296,7 @@ spec = do
                                          ]
 
             it "translates programs with equals" $ do
-                let expression = BinaryExpression (Int32 4) Equals (Int32 2)
+                let expression = BinaryExpression (Int64 4) Equals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -321,7 +321,7 @@ spec = do
                                          ]
 
             it "translates programs with not equals" $ do
-                let expression = BinaryExpression (Int32 4) NotEquals (Int32 2)
+                let expression = BinaryExpression (Int64 4) NotEquals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -346,7 +346,7 @@ spec = do
                                          ]
 
             it "translates programs with greater than" $ do
-                let expression = BinaryExpression (Int32 4) GreaterThan (Int32 2)
+                let expression = BinaryExpression (Int64 4) GreaterThan (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -371,7 +371,7 @@ spec = do
                                          ]
 
             it "translates programs with logical and" $ do
-                let expression = BinaryExpression (Int32 0) LogicalAnd (Int32 1)
+                let expression = BinaryExpression (Int64 0) LogicalAnd (Int64 1)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -399,7 +399,7 @@ spec = do
                                          ]
 
             it "translates programs with logical or" $ do
-                let expression = BinaryExpression (Int32 0) LogicalOr (Int32 1)
+                let expression = BinaryExpression (Int64 0) LogicalOr (Int64 1)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -431,8 +431,8 @@ spec = do
                 let a          = toIdentifier "a"
                     b          = toIdentifier "b"
                     statement1 = Declaration Int a Nothing
-                    statement2 = Expression $ Assignment a $ Int32 1
-                    statement3 = Declaration Int b $ Just $ Int32 2
+                    statement2 = Expression $ Assignment a $ Int64 1
+                    statement3 = Declaration Int b $ Just $ Int64 2
                     statement4 = Return $ BinaryExpression (Variable a) Addition (Variable b)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
@@ -468,8 +468,8 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Expression $ Assignment (toIdentifier "a") (Int32 1)
-                                                       , Return $ Int32 1
+                                        , body       = [ Expression $ Assignment (toIdentifier "a") (Int64 1)
+                                                       , Return $ Int64 1
                                                        ]
                                         }
                     program = Program function
@@ -492,7 +492,7 @@ spec = do
                                         , arguments  = ()
                                         , body       = [ Declaration Int (toIdentifier "a") Nothing
                                                        , Declaration Int (toIdentifier "a") Nothing
-                                                       , Return $ Int32 1
+                                                       , Return $ Int64 1
                                                        ]
                                         }
                     program = Program function
@@ -504,7 +504,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Return $ Int32 124]
+                                        , body       = [Return $ Int64 124]
                                         }
                     program = Program function
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
