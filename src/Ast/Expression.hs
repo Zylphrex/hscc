@@ -90,6 +90,17 @@ instance Compile Expression where
                  , "\tpop\t%rcx"
                  , "\tidivq\t%rcx"
                  ]
+    compile (BinaryExpression exp1 Modulus exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp2'
+              ++ ["\tpush\t%rax"]
+              ++ exp1'
+              ++ [ "\tcqto"
+                 , "\tpop\t%rcx"
+                 , "\tidivq\t%rcx"
+                 , "\tmovq\t%rdx, %rax"
+                 ]
     compile (BinaryExpression exp1 LessThanEquals exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
@@ -155,6 +166,51 @@ instance Compile Expression where
                  , "\tcmpq\t%rax, %rcx"
                  , "\tmovq\t$0, %rax"
                  , "\tsetne\t%al"
+                 ]
+    compile (BinaryExpression exp1 BitwiseAnd exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\tandq\t%rcx, %rax"
+                 ]
+    compile (BinaryExpression exp1 BitwiseXor exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\txorq\t%rcx, %rax"
+                 ]
+    compile (BinaryExpression exp1 BitwiseOr exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp1'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp2'
+              ++ [ "\tpop\t%rcx"
+                 , "\torq\t%rcx, %rax"
+                 ]
+    compile (BinaryExpression exp1 BitwiseShiftLeft exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp2'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp1'
+              ++ [ "\tpop\t%rcx"
+                 , "\tsalq\t%cl, %rax"
+                 ]
+    compile (BinaryExpression exp1 BitwiseShiftRight exp2) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        return $ exp2'
+              ++ [ "\tpush\t%rax" ]
+              ++ exp1'
+              ++ [ "\tpop\t%rcx"
+                 , "\tsarq\t%cl, %rax"
                  ]
     compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -274,13 +330,61 @@ instance Parse RawLogicalAndOperator where
 instance BinaryOp RawLogicalAndOperator where
     toBinaryOperator RawLogicalAnd = LogicalAnd
 
-newtype RawLogicalAndExpression = RawLogicalAndExpression (RawExp RawEqualityExpression RawLogicalAndOperator)
+newtype RawLogicalAndExpression = RawLogicalAndExpression (RawExp RawBitwiseOrExpression RawLogicalAndOperator)
 
 instance Parse RawLogicalAndExpression where
     parse = RawLogicalAndExpression <$> parse
 
 instance Exp RawLogicalAndExpression where
     toExpression (RawLogicalAndExpression t) = toExpression t
+
+data RawBitwiseOrOperator = RawBitwiseOr
+
+instance Parse RawBitwiseOrOperator where
+    parse = RawBitwiseOr <$ parseCharacter '|'
+
+instance BinaryOp RawBitwiseOrOperator where
+    toBinaryOperator RawBitwiseOr = BitwiseOr
+
+newtype RawBitwiseOrExpression = RawBitwiseOrExpression (RawExp RawBitwiseXorExpression RawBitwiseOrOperator)
+
+instance Parse RawBitwiseOrExpression  where
+    parse = RawBitwiseOrExpression <$> parse
+
+instance Exp RawBitwiseOrExpression  where
+    toExpression (RawBitwiseOrExpression t) = toExpression t
+
+data RawBitwiseXorOperator = RawBitwiseXor
+
+instance Parse RawBitwiseXorOperator where
+    parse = RawBitwiseXor <$ parseCharacter '^'
+
+instance BinaryOp RawBitwiseXorOperator where
+    toBinaryOperator RawBitwiseXor = BitwiseXor
+
+newtype RawBitwiseXorExpression = RawBitwiseXorExpression (RawExp RawBitwiseAndExpression RawBitwiseXorOperator)
+
+instance Parse RawBitwiseXorExpression  where
+    parse = RawBitwiseXorExpression <$> parse
+
+instance Exp RawBitwiseXorExpression  where
+    toExpression (RawBitwiseXorExpression t) = toExpression t
+
+data RawBitwiseAndOperator = RawBitwiseAnd
+
+instance Parse RawBitwiseAndOperator where
+    parse = RawBitwiseAnd <$ parseCharacter '&'
+
+instance BinaryOp RawBitwiseAndOperator where
+    toBinaryOperator RawBitwiseAnd = BitwiseAnd
+
+newtype RawBitwiseAndExpression = RawBitwiseAndExpression (RawExp RawEqualityExpression RawBitwiseAndOperator)
+
+instance Parse RawBitwiseAndExpression  where
+    parse = RawBitwiseAndExpression <$> parse
+
+instance Exp RawBitwiseAndExpression  where
+    toExpression (RawBitwiseAndExpression t) = toExpression t
 
 data RawEqualityOperator = RawEquals | RawNotEquals
 
@@ -317,13 +421,31 @@ instance BinaryOp RawRelationalOperator where
   toBinaryOperator RawLessThan          = LessThan
   toBinaryOperator RawGreaterThan       = GreaterThan
 
-newtype RawRelationalExpression = RawRelationalExpression (RawExp RawAdditiveExpression RawRelationalOperator)
+newtype RawRelationalExpression = RawRelationalExpression (RawExp RawBitwiseShiftExpression RawRelationalOperator)
 
 instance Parse RawRelationalExpression where
     parse = RawRelationalExpression <$> parse
 
 instance Exp RawRelationalExpression where
     toExpression (RawRelationalExpression t) = toExpression t
+
+data RawBitwiseShiftOperator = RawBitwiseShiftLeft | RawBitwiseShiftRight
+
+instance Parse RawBitwiseShiftOperator where
+    parse = RawBitwiseShiftLeft <$ parseString "<<"
+        <|> RawBitwiseShiftRight <$ parseString ">>"
+
+instance BinaryOp RawBitwiseShiftOperator where
+    toBinaryOperator RawBitwiseShiftLeft  = BitwiseShiftLeft
+    toBinaryOperator RawBitwiseShiftRight = BitwiseShiftRight
+
+newtype RawBitwiseShiftExpression = RawBitwiseShiftExpression (RawExp RawAdditiveExpression RawBitwiseShiftOperator)
+
+instance Parse RawBitwiseShiftExpression where
+    parse = RawBitwiseShiftExpression <$> parse
+
+instance Exp RawBitwiseShiftExpression where
+    toExpression (RawBitwiseShiftExpression t) = toExpression t
 
 data RawAdditiveOperator = RawAddition | RawSubtraction
 
@@ -343,15 +465,17 @@ instance Parse RawAdditiveExpression where
 instance Exp RawAdditiveExpression where
     toExpression (RawAdditiveExpression t) = toExpression t
 
-data RawBinaryTermOperator = RawMultiplication | RawDivision
+data RawBinaryTermOperator = RawMultiplication | RawDivision | RawModulus
 
 instance Parse RawBinaryTermOperator where
     parse = RawMultiplication <$ parseCharacter '*'
         <|> RawDivision <$ parseCharacter '/'
+        <|> RawModulus <$ parseCharacter '%'
 
 instance BinaryOp RawBinaryTermOperator where
     toBinaryOperator RawMultiplication = Multiplication
     toBinaryOperator RawDivision       = Division
+    toBinaryOperator RawModulus        = Modulus
 
 newtype RawTerm = RawTerm (RawExp RawFactor RawBinaryTermOperator)
 

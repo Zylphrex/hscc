@@ -55,6 +55,22 @@ spec = do
                 let mResult = tryParser (parse :: Parser Expression) "1/1"
                 mResult `shouldBe` pure (BinaryExpression (Int64 1) Division (Int64 1), read "")
 
+            it "parse binary expression with modulus" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1%1"
+                mResult `shouldBe` pure (BinaryExpression (Int64 1) Modulus (Int64 1), read "")
+
+            it "parse binary expression with bitwise and" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1&1"
+                mResult `shouldBe` pure (BinaryExpression (Int64 1) BitwiseAnd (Int64 1), read "")
+
+            it "parse binary expression with bitwise or" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1|1"
+                mResult `shouldBe` pure (BinaryExpression (Int64 1) BitwiseOr (Int64 1), read "")
+
+            it "parse binary expression with bitwise xor" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1^1"
+                mResult `shouldBe` pure (BinaryExpression (Int64 1) BitwiseXor (Int64 1), read "")
+
             it "parse complex binary arithmetic expression" $ do
                 let mResult = tryParser (parse :: Parser Expression) "1    +  4 *(   3   - 1)/ 2"
                     exp1    = BinaryExpression (Int64 3) Subtraction (Int64 1)

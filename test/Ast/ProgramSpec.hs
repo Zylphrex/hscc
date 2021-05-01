@@ -220,6 +220,146 @@ spec = do
                                          , "\tretq"
                                          ]
 
+            it "translates programs with modulus" $ do
+                let expression = BinaryExpression (Int64 4) Modulus (Int64 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return expression]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$4, %rax"
+                                         , "\tcqto"
+                                         , "\tpop\t%rcx"
+                                         , "\tidivq\t%rcx"
+                                         , "\tmovq\t%rdx, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with bitwise and" $ do
+                let expression = BinaryExpression (Int64 2) BitwiseAnd (Int64 4)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return expression]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$4, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tandq\t%rcx, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with bitwise or" $ do
+                let expression = BinaryExpression (Int64 2) BitwiseOr (Int64 4)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return expression]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$4, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\torq\t%rcx, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with bitwise xor" $ do
+                let expression = BinaryExpression (Int64 2) BitwiseXor (Int64 4)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return expression]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$4, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\txorq\t%rcx, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with bitwise shift left" $ do
+                let expression = BinaryExpression (Int64 4) BitwiseShiftLeft (Int64 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return expression]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$4, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsalq\t%cl, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with bitwise shift right" $ do
+                let expression = BinaryExpression (Int64 4) BitwiseShiftRight (Int64 2)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [Return expression]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$4, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsarq\t%cl, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
             it "translates programs with less than equals" $ do
                 let expression = BinaryExpression (Int64 4) LessThanEquals (Int64 2)
                     function = Function { returnType = Int
