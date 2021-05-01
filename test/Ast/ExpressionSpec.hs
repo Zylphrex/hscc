@@ -71,6 +71,14 @@ spec = do
                 let mResult = tryParser (parse :: Parser Expression) "1^1"
                 mResult `shouldBe` pure (BinaryExpression (Int64 1) BitwiseXor (Int64 1), read "")
 
+            it "parse binary expression with bitwise shift left" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1<<1"
+                mResult `shouldBe` pure (BinaryExpression (Int64 1) BitwiseShiftLeft (Int64 1), read "")
+
+            it "parse binary expression with bitwise shift right" $ do
+                let mResult = tryParser (parse :: Parser Expression) "1>>1"
+                mResult `shouldBe` pure (BinaryExpression (Int64 1) BitwiseShiftRight (Int64 1), read "")
+
             it "parse complex binary arithmetic expression" $ do
                 let mResult = tryParser (parse :: Parser Expression) "1    +  4 *(   3   - 1)/ 2"
                     exp1    = BinaryExpression (Int64 3) Subtraction (Int64 1)

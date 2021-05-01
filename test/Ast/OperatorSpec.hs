@@ -65,6 +65,9 @@ spec = do
                 it "should render division" $ do
                     render (prettyPrint Division) `shouldBe` "/"
 
+                it "should render modulus" $ do
+                    render (prettyPrint Modulus) `shouldBe` "%"
+
                 it "should render addition" $ do
                     render (prettyPrint Addition) `shouldBe` "+"
 
@@ -94,3 +97,12 @@ spec = do
 
                 it "should render logical or" $ do
                     render (prettyPrint LogicalOr) `shouldBe` "||"
+
+                it "should render bitwise and" $ do
+                    render (prettyPrint BitwiseAnd) `shouldBe` "&"
+
+                it "should render bitwise or" $ do
+                    render (prettyPrint BitwiseOr) `shouldBe` "|"
+
+                it "should render bitwise xor" $ do
+                    render (prettyPrint BitwiseXor) `shouldBe` "^"
