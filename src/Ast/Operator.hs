@@ -25,14 +25,20 @@ instance PrettyPrint UnaryOperator where
 
 data BinaryOperator = Multiplication
                     | Division
+                    | Modulus
                     | Addition
                     | Subtraction
+                    | BitwiseShiftLeft
+                    | BitwiseShiftRight
                     | LessThanEquals
                     | GreaterThanEquals
                     | LessThan
                     | GreaterThan
                     | Equals
                     | NotEquals
+                    | BitwiseOr
+                    | BitwiseAnd
+                    | BitwiseXor
                     | LogicalAnd
                     | LogicalOr
     deriving (Eq, Show)
@@ -40,13 +46,19 @@ data BinaryOperator = Multiplication
 instance PrettyPrint BinaryOperator where
     prettyPrint Multiplication    = char '*'
     prettyPrint Division          = char '/'
+    prettyPrint Modulus           = char '%'
     prettyPrint Addition          = char '+'
     prettyPrint Subtraction       = char '-'
+    prettyPrint BitwiseShiftLeft  = text "<<"
+    prettyPrint BitwiseShiftRight = text ">>"
     prettyPrint LessThanEquals    = text "<="
     prettyPrint GreaterThanEquals = text ">="
     prettyPrint LessThan          = char '<'
     prettyPrint GreaterThan       = char '>'
     prettyPrint Equals            = text "=="
     prettyPrint NotEquals         = text "!="
+    prettyPrint BitwiseOr         = char '|'
+    prettyPrint BitwiseAnd        = char '&'
+    prettyPrint BitwiseXor        = char '^'
     prettyPrint LogicalAnd        = text "&&"
     prettyPrint LogicalOr         = text "||"
