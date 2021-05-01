@@ -106,3 +106,9 @@ spec = do
 
                 it "should render bitwise xor" $ do
                     render (prettyPrint BitwiseXor) `shouldBe` "^"
+
+                it "should render bitwise shift left" $ do
+                    render (prettyPrint BitwiseShiftLeft) `shouldBe` "<<"
+
+                it "should render bitwise shift right" $ do
+                    render (prettyPrint BitwiseShiftRight) `shouldBe` ">>"
