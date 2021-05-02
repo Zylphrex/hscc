@@ -8,7 +8,10 @@ import Data.Int ( Int64 )
 import Data.Maybe ( fromJust, isNothing )
 import Text.PrettyPrint ( char, equals, parens, space, text )
 
-import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
+import Ast.Operator ( UnaryOperator(..)
+                    , BinaryOperator(..)
+                    , AssignmentOperator(..)
+                    )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , runCompiler
@@ -30,7 +33,7 @@ import Pretty ( PrettyPrint(prettyPrint) )
 data Expression = Int64 Int64
                 | UnaryExpression UnaryOperator Expression
                 | BinaryExpression Expression BinaryOperator Expression
-                | Assignment Identifier Expression
+                | AssignmentExpression Identifier AssignmentOperator Expression
                 | Variable Identifier
     deriving (Eq, Show)
 
@@ -253,7 +256,7 @@ instance Compile Expression where
                  , "\tsetne\t%al"
                  , end ++ ":"
                  ]
-    compile (Assignment identifier exp) = Compiler $ do
+    compile (AssignmentExpression identifier Assignment exp) = Compiler $ do
         state <- get
         let identifier' = fromIdentifier identifier
             stackFrame' = stackFrame state
@@ -277,8 +280,8 @@ instance PrettyPrint Expression where
     prettyPrint (UnaryExpression op exp) = prettyPrint op <> prettyPrint exp
     prettyPrint (BinaryExpression exp1 op exp2) =
         parens $ prettyPrint exp1 <> prettyPrint op <> prettyPrint exp2
-    prettyPrint (Assignment identifier exp) =
-        prettyPrint identifier <> space <> equals <> space <> prettyPrint exp
+    prettyPrint (AssignmentExpression identifier op exp) =
+        prettyPrint identifier <> space <> prettyPrint op <> space <> prettyPrint exp
     prettyPrint (Variable identifier) = prettyPrint identifier
 
 data RawExpression = RawAssignnmentExpressionWrapper RawAssignmentExpression
@@ -292,19 +295,15 @@ instance Exp RawExpression where
     toExpression (RawAssignnmentExpressionWrapper exp) = toExpression exp
     toExpression (RawLogicalOrExpressionWrapper exp)  = toExpression exp
 
-data RawAssignmentExpression = RawAssignmentExpression Identifier RawExpression
+data RawAssignmentExpression = RawAssignmentExpression Identifier AssignmentOperator RawExpression
 
 instance Parse RawAssignmentExpression where
     parse = RawAssignmentExpression <$> parse
-                                    <*> (  parseSpaces
-                                        *> parseCharacter '='
-                                        *> parseSpaces
-                                        *> parse
-                                        <* parseSpaces
-                                        )
+                                    <*> (parseSpaces *> parse)
+                                    <*> (parseSpaces *> parse <* parseSpaces)
 
 instance Exp RawAssignmentExpression where
-    toExpression (RawAssignmentExpression v exp) = Assignment v $ toExpression exp
+    toExpression (RawAssignmentExpression v op exp) = AssignmentExpression v op $ toExpression exp
 
 data RawLogicalOrOperator = RawLogicalOr
 

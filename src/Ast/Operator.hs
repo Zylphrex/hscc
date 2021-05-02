@@ -1,5 +1,6 @@
 module Ast.Operator ( UnaryOperator(..)
                     , BinaryOperator(..)
+                    , AssignmentOperator(..)
                     ) where
 
 import Control.Applicative ( Alternative((<|>)) )
@@ -62,3 +63,12 @@ instance PrettyPrint BinaryOperator where
     prettyPrint BitwiseXor        = char '^'
     prettyPrint LogicalAnd        = text "&&"
     prettyPrint LogicalOr         = text "||"
+
+data AssignmentOperator = Assignment
+    deriving (Eq, Show)
+
+instance Parse AssignmentOperator where
+    parse = Assignment <$ parseCharacter '='
+
+instance PrettyPrint AssignmentOperator where
+    prettyPrint Assignment = char '='

@@ -10,7 +10,10 @@ import Test.Hspec
 import Ast.Expression ( Expression(..) )
 import Ast.Function ( Function(..) )
 import Ast.Identifier ( toIdentifier )
-import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
+import Ast.Operator ( UnaryOperator(..)
+                    , BinaryOperator(..)
+                    , AssignmentOperator(..)
+                    )
 import Ast.Program ( Program(..) )
 import Ast.Statement ( Statement(..) )
 import Ast.Type ( Type(..) )
@@ -571,7 +574,7 @@ spec = do
                 let a          = toIdentifier "a"
                     b          = toIdentifier "b"
                     statement1 = Declaration Int a Nothing
-                    statement2 = Expression $ Assignment a $ Int64 1
+                    statement2 = Expression $ AssignmentExpression a Assignment $ Int64 1
                     statement3 = Declaration Int b $ Just $ Int64 2
                     statement4 = Return $ BinaryExpression (Variable a) Addition (Variable b)
                     function = Function { returnType = Int
@@ -605,10 +608,11 @@ spec = do
                                          ]
 
             it "fails to translate program with invalid assignment" $ do
-                let function = Function { returnType = Int
+                let assignment = AssignmentExpression (toIdentifier "a") Assignment (Int64 1)
+                    function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Expression $ Assignment (toIdentifier "a") (Int64 1)
+                                        , body       = [ Expression assignment
                                                        , Return $ Int64 1
                                                        ]
                                         }

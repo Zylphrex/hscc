@@ -7,7 +7,10 @@ import Test.Hspec
 
 import Ast.Expression ( Expression(..) )
 import Ast.Identifier ( toIdentifier )
-import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
+import Ast.Operator ( UnaryOperator(..)
+                    , BinaryOperator(..)
+                    , AssignmentOperator(..)
+                    )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(render) )
 
@@ -141,7 +144,8 @@ spec = do
                 let mResult = tryParser (parse :: Parser Expression) "x = 1 * (2 + 3)"
                     exp1 = BinaryExpression (Int64 2) Addition (Int64 3)
                     exp2 = BinaryExpression (Int64 1) Multiplication exp1
-                mResult `shouldBe` pure (Assignment (toIdentifier "x") exp2, read "")
+                    exp3 = AssignmentExpression (toIdentifier "x") Assignment exp2
+                mResult `shouldBe` pure (exp3, read "")
 
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do
@@ -169,5 +173,5 @@ spec = do
 
             it "should render assignment expression" $ do
                 let expression1 = BinaryExpression (Int64 124) Addition (Int64 456)
-                    expression2 = Assignment (toIdentifier "x") expression1
+                    expression2 = AssignmentExpression (toIdentifier "x") Assignment expression1
                 render expression2 `shouldBe` "x = (124+456)"
