@@ -60,8 +60,7 @@ fromDeclaration (DeclarationWithoutExp t i) = Declaration t i Nothing
 instance Compile BlockItem where
     compile (Statement statement) = compile statement
     compile (Declaration variableType identifier mExpression) = Compiler $ do
-        let hasExpression = isJust mExpression
-        expression' <- if hasExpression
+        expression' <- if isJust mExpression
                        then runCompiler $ compile $ fromJust mExpression
                        else pure []
         state <- get
@@ -75,10 +74,8 @@ instance Compile BlockItem where
         put $ state { stackFrame = stackFrame''
                     , stackIndex = stackIndex''
                     }
-        if hasExpression
-        then return $ expression'
-                   ++ [ "\tpush\t%rax" ]
-        else return [ "\tpush\t%rax" ]
+        return $ expression'
+              ++ [ "\tpush\t%rax" ]
 
 instance PrettyPrint BlockItem where
     prettyPrint (Statement statement) = prettyPrint statement
