@@ -9,6 +9,7 @@ import Text.PrettyPrint ( colon, empty, nest, parens, space, text, vcat, ($$) )
 import Ast.Identifier ( Identifier )
 import Ast.Expression ( Expression(Int64) )
 import Ast.Statement ( Statement(Return) )
+import Ast.BlockItem ( BlockItem(Statement) )
 import Ast.Type ( Type )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
@@ -28,7 +29,7 @@ import Pretty ( PrettyPrint(prettyPrint) )
 data Function = Function { returnType :: Type
                          , identifier :: Identifier
                          , arguments  :: ()
-                         , body       :: [Statement]
+                         , body       :: [BlockItem]
                          } deriving (Eq, Show)
 
 instance Parse Function where
@@ -44,7 +45,7 @@ instance Parse Function where
                          )
                      <*> (  parseCharacter '{'
                          *> ( parseNotNull (many (parseSpaces *> parse <* parseSpaces))
-                          <|> parseSpaces $> [Return $ Int64 0]
+                          <|> parseSpaces $> [Statement $ Return $ Int64 0]
                             )
                          <* parseCharacter '}'
                          )
