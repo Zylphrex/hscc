@@ -6,7 +6,10 @@ import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
 import Text.PrettyPrint ( render )
 
-import Ast.Operator ( UnaryOperator(..), BinaryOperator(..) )
+import Ast.Operator ( UnaryOperator(..)
+                    , BinaryOperator(..)
+                    , AssignmentOperator(..)
+                    )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(prettyPrint) )
 
@@ -112,3 +115,83 @@ spec = do
 
                 it "should render bitwise shift right" $ do
                     render (prettyPrint BitwiseShiftRight) `shouldBe` ">>"
+
+        describe "Assignment Operator" $ do
+            describe "Parse" $ do
+                it "should parse assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "="
+                    mResult `shouldBe` pure (Assignment, read "")
+
+                it "should parse multiplication assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "*="
+                    mResult `shouldBe` pure (MultiplicationAssignment, read "")
+
+                it "should parse division assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "/="
+                    mResult `shouldBe` pure (DivisionAssignment, read "")
+
+                it "should parse modulus assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "%="
+                    mResult `shouldBe` pure (ModulusAssignment, read "")
+
+                it "should parse addition assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "+="
+                    mResult `shouldBe` pure (AdditionAssignment, read "")
+
+                it "should parse subtraction assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "-="
+                    mResult `shouldBe` pure (SubtractionAssignment, read "")
+
+                it "should parse bitwise shift left assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "<<="
+                    mResult `shouldBe` pure (BitwiseShiftLeftAssignment, read "")
+
+                it "should parse bitwise shift right assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) ">>="
+                    mResult `shouldBe` pure (BitwiseShiftRightAssignment, read "")
+
+                it "should parse bitwise or assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "|="
+                    mResult `shouldBe` pure (BitwiseOrAssignment, read "")
+
+                it "should parse bitwise and assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "&="
+                    mResult `shouldBe` pure (BitwiseAndAssignment, read "")
+
+                it "should parse bitwise xor assignment operator" $ do
+                    let mResult = tryParser (parse :: Parser AssignmentOperator) "^="
+                    mResult `shouldBe` pure (BitwiseXorAssignment, read "")
+
+            describe "PrettyPrint" $ do
+                it "should render assignment" $ do
+                    render (prettyPrint Assignment) `shouldBe` "="
+
+                it "should render multiplcation assignment" $ do
+                    render (prettyPrint MultiplicationAssignment) `shouldBe` "*="
+
+                it "should render division assignment" $ do
+                    render (prettyPrint DivisionAssignment) `shouldBe` "/="
+
+                it "should render modulus assignment" $ do
+                    render (prettyPrint ModulusAssignment) `shouldBe` "%="
+
+                it "should render addition assignment" $ do
+                    render (prettyPrint AdditionAssignment) `shouldBe` "+="
+
+                it "should render subtraction assignment" $ do
+                    render (prettyPrint SubtractionAssignment) `shouldBe` "-="
+
+                it "should render bitwise shift left assignment" $ do
+                    render (prettyPrint BitwiseShiftLeftAssignment) `shouldBe` "<<="
+
+                it "should render bitwise shift right assignment" $ do
+                    render (prettyPrint BitwiseShiftRightAssignment) `shouldBe` ">>="
+
+                it "should render bitwise or assignment" $ do
+                    render (prettyPrint BitwiseOrAssignment) `shouldBe` "|="
+
+                it "should render bitwise and assignment" $ do
+                    render (prettyPrint BitwiseAndAssignment) `shouldBe` "&="
+
+                it "should render bitwise xor assignment" $ do
+                    render (prettyPrint BitwiseXorAssignment) `shouldBe` "^="
