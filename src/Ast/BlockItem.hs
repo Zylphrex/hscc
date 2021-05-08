@@ -2,9 +2,9 @@ module Ast.BlockItem ( BlockItem(..) ) where
 
 import Control.Monad ( when )
 import Control.Monad.State ( get, put )
-import Control.Applicative ( Alternative((<|>)) )
+import Control.Applicative as A ( Alternative(empty, (<|>)) )
 import Data.Maybe ( fromJust, isJust )
-import Text.PrettyPrint ( empty, equals, space, text )
+import Text.PrettyPrint as P ( empty, equals, space, text )
 
 import Ast.Expression ( Expression )
 import Ast.Identifier ( Identifier, fromIdentifier )
@@ -31,31 +31,17 @@ data BlockItem = Statement Statement
 
 instance Parse BlockItem where
     parse = Statement <$> parse
-        <|> fromDeclaration <$> parse
-
-data Declaration = DeclarationWithExp Type Identifier Expression
-                 | DeclarationWithoutExp Type Identifier
-
-instance Parse Declaration where
-    parse = DeclarationWithExp <$> parse
-                               <*> (parseNotNull parseSpaces *> parse)
-                               <*> (  parseSpaces
-                                   *> parseCharacter '='
-                                   *> parseSpaces
-                                   *> parse
-                                   <* parseSpaces
-                                   <* parseCharacter ';'
-                                   )
-        <|> DeclarationWithoutExp <$> parse
-                                  <*> (  parseNotNull parseSpaces
-                                      *> parse
-                                      <* parseSpaces
-                                      <* parseCharacter ';'
-                                      )
-
-fromDeclaration :: Declaration -> BlockItem
-fromDeclaration (DeclarationWithExp t i e) = Declaration t i $ Just e
-fromDeclaration (DeclarationWithoutExp t i) = Declaration t i Nothing
+        <|> Declaration <$> parse
+                        <*> (parseNotNull parseSpaces *> parse)
+                        <*> ( ( ( pure <$> (  parseSpaces
+                                           *> parseCharacter '='
+                                           *> parseSpaces
+                                           *> parse
+                                           )
+                              ) <|> (pure A.empty) )
+                              <* parseSpaces
+                              <* parseCharacter ';'
+                            )
 
 instance Compile BlockItem where
     compile (Statement statement) = compile statement
@@ -81,11 +67,11 @@ instance PrettyPrint BlockItem where
     prettyPrint (Statement statement) = prettyPrint statement
     prettyPrint (Declaration variableType identifier mExpression) =
          prettyPrint variableType
-      <> space
-      <> text (fromIdentifier identifier)
+      <> P.space
+      <> P.text (fromIdentifier identifier)
       <> if isJust mExpression
-         then  space
-            <> equals
-            <> space
+         then  P.space
+            <> P.equals
+            <> P.space
             <> prettyPrint (fromJust mExpression)
-         else empty
+         else P.empty
