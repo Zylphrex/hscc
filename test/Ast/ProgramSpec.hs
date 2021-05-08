@@ -608,6 +608,112 @@ spec = do
                                          , "\tretq"
                                          ]
 
+            it "translates programs with compound assignment operators" $ do
+                let a = toIdentifier "a"
+                    exp0 = Expression $ AssignmentExpression a MultiplicationAssignment $ Int64 1
+                    exp1 = Expression $ AssignmentExpression a DivisionAssignment $ Int64 1
+                    exp2 = Expression $ AssignmentExpression a ModulusAssignment $ Int64 1
+                    exp3 = Expression $ AssignmentExpression a AdditionAssignment $ Int64 1
+                    exp4 = Expression $ AssignmentExpression a SubtractionAssignment $ Int64 1
+                    exp5 = Expression $ AssignmentExpression a BitwiseShiftLeftAssignment $ Int64 1
+                    exp6 = Expression $ AssignmentExpression a BitwiseShiftRightAssignment $ Int64 1
+                    exp7 = Expression $ AssignmentExpression a BitwiseOrAssignment $ Int64 1
+                    exp8 = Expression $ AssignmentExpression a BitwiseAndAssignment $ Int64 1
+                    exp9 = Expression $ AssignmentExpression a BitwiseXorAssignment $ Int64 1
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ Declaration Int a $ Just $ Int64 1
+                                                       , Statement exp0
+                                                       , Statement exp1
+                                                       , Statement exp2
+                                                       , Statement exp3
+                                                       , Statement exp4
+                                                       , Statement exp5
+                                                       , Statement exp6
+                                                       , Statement exp7
+                                                       , Statement exp8
+                                                       , Statement exp9
+                                                       , Statement $ Return $ Variable a
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\timulq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tcqto"
+                                         , "\tpop\t%rcx"
+                                         , "\tidivq\t%rcx"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tcqto"
+                                         , "\tpop\t%rcx"
+                                         , "\tidivq\t%rcx"
+                                         , "\tmovq\t%rdx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\taddq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsubq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsalq\t%cl, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsarq\t%cl, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\torq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tandq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\txorq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
             it "fails to translate program with invalid assignment" $ do
                 let assignment = AssignmentExpression (toIdentifier "a") Assignment (Int64 1)
                     function = Function { returnType = Int

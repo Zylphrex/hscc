@@ -266,6 +266,21 @@ instance Compile Expression where
         exp' <- runCompiler $ compile exp
         return $ exp'
               ++ [ "\tmovq\t%rax, " ++ show (fromJust stackOffset) ++ "(%rbp)" ]
+    compile (AssignmentExpression identifier operator exp) = Compiler $ do
+        let binaryOperator = case operator of
+                MultiplicationAssignment    -> Multiplication
+                DivisionAssignment          -> Division
+                ModulusAssignment           -> Modulus
+                AdditionAssignment          -> Addition
+                SubtractionAssignment       -> Subtraction
+                BitwiseShiftLeftAssignment  -> BitwiseShiftLeft
+                BitwiseShiftRightAssignment -> BitwiseShiftRight
+                BitwiseOrAssignment         -> BitwiseOr
+                BitwiseAndAssignment        -> BitwiseAnd
+                BitwiseXorAssignment        -> BitwiseXor
+            binaryExpression = BinaryExpression (Variable identifier) binaryOperator exp
+            assignmentExpression = AssignmentExpression identifier Assignment binaryExpression
+        runCompiler $ compile assignmentExpression
     compile (Variable identifier) = Compiler $ do
         state <- get
         let identifier' = fromIdentifier identifier
