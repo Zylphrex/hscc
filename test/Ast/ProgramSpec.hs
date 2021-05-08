@@ -610,8 +610,9 @@ spec = do
 
             it "translates programs with compound assignment operators" $ do
                 let a = toIdentifier "a"
-                    exp1 = Expression $ AssignmentExpression a MultiplicationAssignment $ Int64 1
-                    exp2 = Expression $ AssignmentExpression a DivisionAssignment $ Int64 1
+                    exp0 = Expression $ AssignmentExpression a MultiplicationAssignment $ Int64 1
+                    exp1 = Expression $ AssignmentExpression a DivisionAssignment $ Int64 1
+                    exp2 = Expression $ AssignmentExpression a ModulusAssignment $ Int64 1
                     exp3 = Expression $ AssignmentExpression a AdditionAssignment $ Int64 1
                     exp4 = Expression $ AssignmentExpression a SubtractionAssignment $ Int64 1
                     exp5 = Expression $ AssignmentExpression a BitwiseShiftLeftAssignment $ Int64 1
@@ -623,6 +624,7 @@ spec = do
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
                                         , body       = [ Declaration Int a $ Just $ Int64 1
+                                                       , Statement exp0
                                                        , Statement exp1
                                                        , Statement exp2
                                                        , Statement exp3
@@ -655,6 +657,14 @@ spec = do
                                          , "\tcqto"
                                          , "\tpop\t%rcx"
                                          , "\tidivq\t%rcx"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tcqto"
+                                         , "\tpop\t%rcx"
+                                         , "\tidivq\t%rcx"
+                                         , "\tmovq\t%rdx, %rax"
                                          , "\tmovq\t%rax, -8(%rbp)"
                                          , "\tmovq\t-8(%rbp), %rax"
                                          , "\tpush\t%rax"
