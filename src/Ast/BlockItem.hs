@@ -38,7 +38,7 @@ instance Parse BlockItem where
                                            *> parseSpaces
                                            *> parse
                                            )
-                              ) <|> (pure A.empty) )
+                              ) <|> pure A.empty )
                               <* parseSpaces
                               <* parseCharacter ';'
                             )
