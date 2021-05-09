@@ -71,8 +71,8 @@ instance Compile Function where
 
 instance PrettyPrint Function where
     prettyPrint (Function returnType identifier arguments body) =
-      text "FUN" <> space <> prettyPrint returnType <> space <> prettyPrint identifier <> colon $$
-      nest 4 (
-          (text "params" <> colon <> space <> parens empty) $$
-          (text "body" <> colon $$ nest 4 (vcat (prettyPrint <$> body)))
-      )
+        text "FUN" <> space <> prettyPrint returnType <> space <> prettyPrint identifier <> colon $$
+        nest 4 (
+            (text "params" <> colon <> space <> parens empty) $$
+            (text "body" <> colon $$ nest 4 (vcat (prettyPrint <$> body)))
+        )
