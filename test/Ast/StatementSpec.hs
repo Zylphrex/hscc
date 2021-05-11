@@ -52,6 +52,16 @@ spec = do
                 let mResult = tryParser (parse :: Parser Statement) "124;stuff"
                 mResult `shouldBe` pure (Expression $ Int64 124, read "stuff")
 
+            it "parse if statement without else" $ do
+                let mResult = tryParser (parse :: Parser Statement) "if (1) return 5;"
+                mResult `shouldBe` pure (Conditional (Int64 1) (Return (Int64 5)) Nothing, read "")
+
+            it "parse if statement with else" $ do
+                let mResult = tryParser (parse :: Parser Statement) "if (1) return 5; else return 10;"
+                    return1 = Return $ Int64 5
+                    return2 = Return $ Int64 10
+                mResult `shouldBe` pure (Conditional (Int64 1) return1 $ Just return2, read "")
+
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
                 let statement = Return $ Int64 124
@@ -60,3 +70,21 @@ spec = do
             it "should render expression statement" $ do
                 let statement = Expression $ Int64 124
                 render statement `shouldBe` "124"
+
+            it "should render condition statement without else" $ do
+                let statement = Conditional (Int64 1) (Return (Int64 5)) Nothing
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "IF 1"
+                        , "    RETURN 5"
+                        ]
+                render statement `shouldBe` rendered
+
+            it "should render condition statement with else" $ do
+                let statement = Conditional (Int64 1) (Return (Int64 5)) $ Just (Return (Int64 10))
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "IF 1"
+                        , "    RETURN 5"
+                        , "ELSE"
+                        , "    RETURN 10"
+                        ]
+                render statement `shouldBe` rendered

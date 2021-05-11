@@ -219,8 +219,8 @@ instance Compile Expression where
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
         s <- get
-        let i = n s
-        let rhs = "_rhs_and" ++ show i
+        let i   = n s
+            rhs = "_rhs_and" ++ show i
             end = "_end_and" ++ show i
         put $ s { n = i + 1 }
         return $ exp1'
@@ -239,8 +239,8 @@ instance Compile Expression where
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
         s <- get
-        let i = n s
-        let rhs = "_rhs_or" ++ show i
+        let i   = n s
+            rhs = "_rhs_or" ++ show i
             end = "_end_or" ++ show i
         put $ s { n = i + 1 }
         return $ exp1'

@@ -750,6 +750,61 @@ spec = do
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
+            it "translates program with if statement without else block" $ do
+                let return1  = Return $ Int64 1
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ Statement $ Conditional (Int64 1) return1 Nothing
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _if_end0"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         , "_if_end0:"
+                                         ]
+
+            it "translates program with if statement with else block" $ do
+                let return1  = Return $ Int64 1
+                    return2  = Return $ Int64 2
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ Statement $ Conditional (Int64 1) return1 $ Just return2
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _if_false0"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         , "\tjmp _if_end0"
+                                         , "_if_false0:"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         , "_if_end0:"
+                                         ]
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int
