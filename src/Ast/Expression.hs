@@ -6,7 +6,7 @@ import Control.Monad.State ( get, put )
 import Data.Char ( isDigit )
 import Data.Int ( Int64 )
 import Data.Maybe ( fromJust, isNothing )
-import Text.PrettyPrint ( char, equals, parens, space, text )
+import Text.PrettyPrint ( char, colon, equals, parens, space, text )
 
 import Ast.Operator ( UnaryOperator(..)
                     , BinaryOperator(..)
@@ -35,6 +35,7 @@ data Expression = Int64 Int64
                 | BinaryExpression Expression BinaryOperator Expression
                 | AssignmentExpression Identifier AssignmentOperator Expression
                 | Variable Identifier
+                | ConditionalExpression Expression Expression Expression
     deriving (Eq, Show)
 
 instance Parse Expression where
@@ -289,6 +290,25 @@ instance Compile Expression where
         when (isNothing stackOffset)
              (fail $ "Variable: " ++ identifier' ++ " is not declared")
         return [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
+    compile (ConditionalExpression exp1 exp2 exp3) = Compiler $ do
+        exp1' <- runCompiler $ compile exp1
+        exp2' <- runCompiler $ compile exp2
+        exp3' <- runCompiler $ compile exp3
+        s <- get
+        let i     = n s
+            false = "_if_false" ++ show i
+            end   = "_if_end" ++ show i
+        put $ s { n = i + 1 }
+        return $ exp1'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tje " ++ false
+                 ]
+              ++ exp2'
+              ++ [ "\tjmp " ++ end
+                 , false ++ ":"
+                 ]
+              ++ exp3'
+              ++ [ end ++ ":" ]
 
 instance PrettyPrint Expression where
     prettyPrint (Int64 num) = text $ show num
@@ -298,17 +318,23 @@ instance PrettyPrint Expression where
     prettyPrint (AssignmentExpression identifier op exp) =
         prettyPrint identifier <> space <> prettyPrint op <> space <> prettyPrint exp
     prettyPrint (Variable identifier) = prettyPrint identifier
+    prettyPrint (ConditionalExpression exp1 exp2 exp3) =
+        parens (prettyPrint exp1)
+        <> space <> char '?' <> space
+        <> parens (prettyPrint exp2)
+        <> space <> colon <> space
+        <> parens (prettyPrint exp3)
 
-data RawExpression = RawAssignnmentExpressionWrapper RawAssignmentExpression
-                   | RawLogicalOrExpressionWrapper RawLogicalOrExpression
+data RawExpression = RawAssignmentExpressionWrapper RawAssignmentExpression
+                   | RawConditionalExpressionWrapper RawConditionalExpression
 
 instance Parse RawExpression where
-    parse = RawAssignnmentExpressionWrapper <$> parse
-        <|> RawLogicalOrExpressionWrapper <$> parse
+    parse = RawAssignmentExpressionWrapper <$> parse
+        <|> RawConditionalExpressionWrapper <$> parse
 
 instance Exp RawExpression where
-    toExpression (RawAssignnmentExpressionWrapper exp) = toExpression exp
-    toExpression (RawLogicalOrExpressionWrapper exp)  = toExpression exp
+    toExpression (RawAssignmentExpressionWrapper exp) = toExpression exp
+    toExpression (RawConditionalExpressionWrapper exp) = toExpression exp
 
 data RawAssignmentExpression = RawAssignmentExpression Identifier AssignmentOperator RawExpression
 
@@ -319,6 +345,20 @@ instance Parse RawAssignmentExpression where
 
 instance Exp RawAssignmentExpression where
     toExpression (RawAssignmentExpression v op exp) = AssignmentExpression v op $ toExpression exp
+
+data RawConditionalExpression = RawConditionalExpression RawLogicalOrExpression RawExpression RawConditionalExpression
+                              | RawConditionalOrExpression RawLogicalOrExpression
+
+instance Parse RawConditionalExpression where
+    parse = RawConditionalExpression <$> parse
+                                     <*> (parseSpaces *> parseCharacter '?' *> parseSpaces *> parse)
+                                     <*> (parseSpaces *> parseCharacter ':' *> parseSpaces *> parse)
+        <|> RawConditionalOrExpression <$> parse
+
+instance Exp RawConditionalExpression where
+    toExpression (RawConditionalExpression exp1 exp2 exp3) =
+        ConditionalExpression (toExpression exp1) (toExpression exp2) (toExpression exp3)
+    toExpression (RawConditionalOrExpression exp) = toExpression exp
 
 data RawLogicalOrOperator = RawLogicalOr
 
