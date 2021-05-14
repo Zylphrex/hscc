@@ -147,31 +147,47 @@ spec = do
                     exp3 = AssignmentExpression (toIdentifier "x") Assignment exp2
                 mResult `shouldBe` pure (exp3, read "")
 
+            it "parses conditional expression" $ do
+                let mResult = tryParser (parse :: Parser Expression) "x = 1 ? 2 : 3"
+                    exp1 = Int64 1
+                    exp2 = Int64 2
+                    exp3 = Int64 3
+                    exp4 = ConditionalExpression exp1 exp2 exp3
+                    exp5 = AssignmentExpression (toIdentifier "x") Assignment exp4
+                mResult `shouldBe` pure (exp5, read "")
+
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do
-                let expression = Int64 124
-                render expression `shouldBe` "124"
+                let exp = Int64 124
+                render exp `shouldBe` "124"
 
             it "should render unary expression" $ do
-                let expression = UnaryExpression LogicalNegation $ Int64 124
-                render expression `shouldBe` "!124"
+                let exp = UnaryExpression LogicalNegation $ Int64 124
+                render exp `shouldBe` "!124"
 
             it "should render binary expression" $ do
-                let expression = BinaryExpression (Int64 124) Addition (Int64 456)
-                render expression `shouldBe` "(124+456)"
+                let exp = BinaryExpression (Int64 124) Addition (Int64 456)
+                render exp `shouldBe` "(124+456)"
 
             it "should render complex binary expression" $ do
-                let expression1 = BinaryExpression (Int64 3) Subtraction (Int64 1)
-                    expression2 = BinaryExpression (Int64 4) Multiplication expression1
-                    expression3 = BinaryExpression expression2 Division (Int64 2)
-                    expression4 = BinaryExpression (Int64 1) Addition expression3
-                render expression4 `shouldBe` "(1+((4*(3-1))/2))"
+                let exp1 = BinaryExpression (Int64 3) Subtraction (Int64 1)
+                    exp2 = BinaryExpression (Int64 4) Multiplication exp1
+                    exp3 = BinaryExpression exp2 Division (Int64 2)
+                    exp4 = BinaryExpression (Int64 1) Addition exp3
+                render exp4 `shouldBe` "(1+((4*(3-1))/2))"
 
             it "should render variable expression" $ do
-                let expression = Variable $ toIdentifier "x"
-                render expression `shouldBe` "x"
+                let exp = Variable $ toIdentifier "x"
+                render exp `shouldBe` "x"
 
             it "should render assignment expression" $ do
-                let expression1 = BinaryExpression (Int64 124) Addition (Int64 456)
-                    expression2 = AssignmentExpression (toIdentifier "x") Assignment expression1
-                render expression2 `shouldBe` "x = (124+456)"
+                let exp1 = BinaryExpression (Int64 124) Addition (Int64 456)
+                    exp2 = AssignmentExpression (toIdentifier "x") Assignment exp1
+                render exp2 `shouldBe` "x = (124+456)"
+
+            it "should render conditional expression" $ do
+                let exp1 = Int64 1
+                    exp2 = Int64 2
+                    exp3 = Int64 3
+                    exp4 = ConditionalExpression exp1 exp2 exp3
+                render exp4 `shouldBe` "(1) ? (2) : (3)"

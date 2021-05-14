@@ -805,6 +805,33 @@ spec = do
                                          , "_if_end0:"
                                          ]
 
+            it "translates program with conditional expression" $ do
+                let exp       = ConditionalExpression (Int64 1) (Int64 2) (Int64 3)
+                    statement = Statement $ Return exp
+                    function  = Function { returnType = Int
+                                         , identifier = toIdentifier "main"
+                                         , arguments  = ()
+                                         , body       = [ statement ]
+                                         }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _if_false0"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tjmp _if_end0"
+                                         , "_if_false0:"
+                                         , "\tmovq\t$3, %rax"
+                                         , "_if_end0:"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int
