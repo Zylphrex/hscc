@@ -158,16 +158,16 @@ spec = do
 
         describe "PrettyPrint" $ do
             it "should render integer expression" $ do
-                let exp = Int64 124
-                render exp `shouldBe` "124"
+                let expression = Int64 124
+                render expression `shouldBe` "124"
 
             it "should render unary expression" $ do
-                let exp = UnaryExpression LogicalNegation $ Int64 124
-                render exp `shouldBe` "!124"
+                let expression = UnaryExpression LogicalNegation $ Int64 124
+                render expression `shouldBe` "!124"
 
             it "should render binary expression" $ do
-                let exp = BinaryExpression (Int64 124) Addition (Int64 456)
-                render exp `shouldBe` "(124+456)"
+                let expression = BinaryExpression (Int64 124) Addition (Int64 456)
+                render expression `shouldBe` "(124+456)"
 
             it "should render complex binary expression" $ do
                 let exp1 = BinaryExpression (Int64 3) Subtraction (Int64 1)
@@ -177,8 +177,8 @@ spec = do
                 render exp4 `shouldBe` "(1+((4*(3-1))/2))"
 
             it "should render variable expression" $ do
-                let exp = Variable $ toIdentifier "x"
-                render exp `shouldBe` "x"
+                let expression = Variable $ toIdentifier "x"
+                render expression `shouldBe` "x"
 
             it "should render assignment expression" $ do
                 let exp1 = BinaryExpression (Int64 124) Addition (Int64 456)

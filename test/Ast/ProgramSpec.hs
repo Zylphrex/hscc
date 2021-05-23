@@ -7,7 +7,7 @@ import Data.Default ( def )
 import Test.Hspec
 
 -- import Assembly ( joinAssembly, toAssembly )
-import Ast.BlockItem ( BlockItem(..) )
+import Ast.BlockItem ( BlockItem(..), Statement(..) )
 import Ast.Expression ( Expression(..) )
 import Ast.Function ( Function(..) )
 import Ast.Identifier ( toIdentifier )
@@ -16,7 +16,6 @@ import Ast.Operator ( UnaryOperator(..)
                     , AssignmentOperator(..)
                     )
 import Ast.Program ( Program(..) )
-import Ast.Statement ( Statement(..) )
 import Ast.Type ( Type(..) )
 import Compiler ( Compile(compile), executeCompiler)
 import Parser ( Parser, Parse(parse), tryParser )
@@ -35,7 +34,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return $ Int64 124]
+                                        , body       = [StatementItem $ Return $ Int64 124]
                                         }
                     program = Program function
                 mResult `shouldBe` pure (program, read "")
@@ -45,7 +44,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return $ Int64 124]
+                                        , body       = [StatementItem $ Return $ Int64 124]
                                         }
                     program = Program function
                 mResult `shouldBe` pure (program, read "ccc")
@@ -55,7 +54,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return $ Int64 124]
+                                        , body       = [StatementItem $ Return $ Int64 124]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -74,7 +73,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -94,7 +93,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -114,7 +113,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -136,7 +135,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -159,7 +158,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -182,7 +181,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -205,7 +204,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -229,7 +228,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -254,7 +253,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -277,7 +276,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -300,7 +299,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -323,7 +322,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -346,7 +345,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -369,7 +368,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -394,7 +393,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -419,7 +418,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -444,7 +443,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -469,7 +468,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -494,7 +493,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -519,7 +518,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -547,7 +546,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return expression]
+                                        , body       = [StatementItem $ Return expression]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
@@ -574,10 +573,10 @@ spec = do
             it "translates programs with variables" $ do
                 let a          = toIdentifier "a"
                     b          = toIdentifier "b"
-                    statement1 = Declaration Int a Nothing
-                    statement2 = Statement $ Expression $ AssignmentExpression a Assignment $ Int64 1
-                    statement3 = Declaration Int b $ Just $ Int64 2
-                    statement4 = Statement $ Return $ BinaryExpression (Variable a) Addition (Variable b)
+                    statement1 = DeclarationItem Int a Nothing
+                    statement2 = StatementItem $ Expression $ AssignmentExpression a Assignment $ Int64 1
+                    statement3 = DeclarationItem Int b $ Just $ Int64 2
+                    statement4 = StatementItem $ Return $ BinaryExpression (Variable a) Addition (Variable b)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -623,18 +622,18 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Declaration Int a $ Just $ Int64 1
-                                                       , Statement exp0
-                                                       , Statement exp1
-                                                       , Statement exp2
-                                                       , Statement exp3
-                                                       , Statement exp4
-                                                       , Statement exp5
-                                                       , Statement exp6
-                                                       , Statement exp7
-                                                       , Statement exp8
-                                                       , Statement exp9
-                                                       , Statement $ Return $ Variable a
+                                        , body       = [ DeclarationItem Int a $ Just $ Int64 1
+                                                       , StatementItem exp0
+                                                       , StatementItem exp1
+                                                       , StatementItem exp2
+                                                       , StatementItem exp3
+                                                       , StatementItem exp4
+                                                       , StatementItem exp5
+                                                       , StatementItem exp6
+                                                       , StatementItem exp7
+                                                       , StatementItem exp8
+                                                       , StatementItem exp9
+                                                       , StatementItem $ Return $ Variable a
                                                        ]
                                         }
                     program = Program function
@@ -719,8 +718,8 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Statement $ Expression assignment
-                                                       , Statement $ Return $ Int64 1
+                                        , body       = [ StatementItem $ Expression assignment
+                                                       , StatementItem $ Return $ Int64 1
                                                        ]
                                         }
                     program = Program function
@@ -731,7 +730,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Statement $ Return $ Variable $ toIdentifier "a" ]
+                                        , body       = [ StatementItem $ Return $ Variable $ toIdentifier "a" ]
                                         }
                     program = Program function
                     assembly = executeCompiler (compile program) def
@@ -741,9 +740,9 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Declaration Int (toIdentifier "a") Nothing
-                                                       , Declaration Int (toIdentifier "a") Nothing
-                                                       , Statement $ Return $ Int64 1
+                                        , body       = [ DeclarationItem Int (toIdentifier "a") Nothing
+                                                       , DeclarationItem Int (toIdentifier "a") Nothing
+                                                       , StatementItem $ Return $ Int64 1
                                                        ]
                                         }
                     program = Program function
@@ -755,7 +754,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Statement $ Conditional (Int64 1) return1 Nothing
+                                        , body       = [ StatementItem $ Conditional (Int64 1) return1 Nothing
                                                        ]
                                         }
                     program = Program function
@@ -780,7 +779,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ Statement $ Conditional (Int64 1) return1 $ Just return2
+                                        , body       = [ StatementItem $ Conditional (Int64 1) return1 $ Just return2
                                                        ]
                                         }
                     program = Program function
@@ -806,9 +805,9 @@ spec = do
                                          ]
 
             it "translates program with conditional expression" $ do
-                let exp       = ConditionalExpression (Int64 1) (Int64 2) (Int64 3)
-                    statement = Statement $ Return exp
-                    function  = Function { returnType = Int
+                let expression = ConditionalExpression (Int64 1) (Int64 2) (Int64 3)
+                    statement  = StatementItem $ Return expression
+                    function   = Function { returnType = Int
                                          , identifier = toIdentifier "main"
                                          , arguments  = ()
                                          , body       = [ statement ]
@@ -837,7 +836,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [Statement $ Return $ Int64 124]
+                                        , body       = [StatementItem $ Return $ Int64 124]
                                         }
                     program = Program function
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines

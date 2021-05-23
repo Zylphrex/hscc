@@ -8,8 +8,9 @@ import Text.PrettyPrint ( colon, empty, nest, parens, space, text, vcat, ($$) )
 
 import Ast.Identifier ( Identifier )
 import Ast.Expression ( Expression(Int64) )
-import Ast.Statement ( Statement(Return) )
-import Ast.BlockItem ( BlockItem(Statement) )
+import Ast.BlockItem ( BlockItem(StatementItem)
+                     , Statement(Return)
+                     )
 import Ast.Type ( Type )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
@@ -45,7 +46,7 @@ instance Parse Function where
                          )
                      <*> (  parseCharacter '{'
                          *> ( parseNotNull (many (parseSpaces *> parse <* parseSpaces))
-                          <|> parseSpaces $> [Statement $ Return $ Int64 0]
+                          <|> parseSpaces $> [StatementItem $ Return $ Int64 0]
                             )
                          <* parseCharacter '}'
                          )
