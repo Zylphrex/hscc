@@ -2,10 +2,13 @@ module Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , Os(Darwin, Other)
                 , os
-                , n
-                , stackFrame
                 , stackIndex
+                , getState
+                , setState
+                , resetIndex
                 , getOffset
+                , getOs
+                , getSymbols
                 , isDeclared
                 , pushFrame
                 , runCompiler
@@ -16,6 +19,8 @@ import Control.Applicative ( Alternative((<|>), empty) )
 import Control.Monad.State ( StateT(StateT)
                            , evalStateT
                            , runStateT
+                           , get
+                           , put
                            )
 import Data.Default ( Default(def) )
 import Data.Maybe ( isJust )
@@ -24,15 +29,6 @@ data Os = Darwin | Other deriving (Eq, Show)
 
 newtype StackFrame = StackFrame [(String, Int)]
     deriving (Eq, Show)
-
-getOffset :: String -> StackFrame -> Maybe Int
-getOffset key (StackFrame stackFrame) = lookup key stackFrame
-
-isDeclared :: String -> StackFrame -> Bool
-isDeclared key = isJust . getOffset key
-
-pushFrame :: (String, Int) -> StackFrame -> StackFrame
-pushFrame frame (StackFrame stackFrame) = StackFrame (frame : stackFrame)
 
 data CompilerState = CompilerState
     { os :: Os
@@ -48,8 +44,51 @@ instance Default CompilerState where
                         , stackIndex = 0
                         }
 
+type CompilerStateT a = StateT CompilerState Maybe a
+
+getState :: CompilerStateT CompilerState
+getState = get
+
+setState :: CompilerState -> CompilerStateT ()
+setState = put
+
+resetIndex :: CompilerStateT ()
+resetIndex = do
+    state <- getState
+    setState $ state { stackIndex = 0 }
+
+getOs :: CompilerStateT Os
+getOs = os <$> getState
+
+getSymbols :: [String] -> CompilerStateT [String]
+getSymbols prefixes = do
+    state <- getState
+    let i = n state
+    setState $ state { n = i + 1}
+    return $ (++ show i) <$> prefixes
+
+getOffset :: String -> CompilerStateT (Maybe Int)
+getOffset key = do
+    state <- getState
+    let StackFrame sf = stackFrame state
+    return $ lookup key sf
+
+isDeclared :: String -> CompilerStateT Bool
+isDeclared key = do
+    mOffset <- getOffset key
+    return $ isJust mOffset
+
+pushFrame :: String -> Int -> CompilerStateT ()
+pushFrame key size = do
+    state <- getState
+    let StackFrame sf = stackFrame state
+        index = stackIndex state - size
+    setState $ state { stackFrame = StackFrame ((key, index) : sf)
+                     , stackIndex = index
+                     }
+
 newtype Compiler a = Compiler
-    { runCompiler :: StateT CompilerState Maybe a
+    { runCompiler :: CompilerStateT a
     }
 
 instance Functor Compiler where

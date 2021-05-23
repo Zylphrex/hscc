@@ -2,7 +2,6 @@ module Ast.Expression ( Expression(..) ) where
 
 import Control.Applicative ( Alternative((<|>), many) )
 import Control.Monad ( when )
-import Control.Monad.State ( get, put )
 import Data.Char ( isDigit )
 import Data.Int ( Int64 )
 import Data.Maybe ( fromJust, isNothing )
@@ -15,9 +14,8 @@ import Ast.Operator ( UnaryOperator(..)
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , runCompiler
-                , n
-                , stackFrame
                 , getOffset
+                , getSymbols
                 )
 import Ast.Identifier ( Identifier, fromIdentifier )
 import Parser ( Parse(parse)
@@ -219,11 +217,7 @@ instance Compile Expression where
     compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
-        s <- get
-        let i   = n s
-            rhs = "_rhs_and" ++ show i
-            end = "_end_and" ++ show i
-        put $ s { n = i + 1 }
+        [rhs, end] <- getSymbols ["_rhs_and", "_end_and"]
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tjne " ++ rhs
@@ -239,11 +233,7 @@ instance Compile Expression where
     compile (BinaryExpression exp1 LogicalOr exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
-        s <- get
-        let i   = n s
-            rhs = "_rhs_or" ++ show i
-            end = "_end_or" ++ show i
-        put $ s { n = i + 1 }
+        [rhs, end] <- getSymbols ["_rhs_or", "_end_or"]
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ rhs
@@ -258,10 +248,8 @@ instance Compile Expression where
                  , end ++ ":"
                  ]
     compile (AssignmentExpression identifier Assignment exp) = Compiler $ do
-        state <- get
         let identifier' = fromIdentifier identifier
-            stackFrame' = stackFrame state
-            stackOffset = getOffset identifier' stackFrame'
+        stackOffset <- getOffset identifier'
         when (isNothing stackOffset)
              (fail $ "Variable: " ++ identifier' ++ " is not declared")
         exp' <- runCompiler $ compile exp
@@ -283,10 +271,8 @@ instance Compile Expression where
             assignmentExpression = AssignmentExpression identifier Assignment binaryExpression
         runCompiler $ compile assignmentExpression
     compile (Variable identifier) = Compiler $ do
-        state <- get
         let identifier' = fromIdentifier identifier
-            stackFrame' = stackFrame state
-            stackOffset = getOffset identifier' stackFrame'
+        stackOffset <- getOffset identifier'
         when (isNothing stackOffset)
              (fail $ "Variable: " ++ identifier' ++ " is not declared")
         return [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
@@ -294,11 +280,7 @@ instance Compile Expression where
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
         exp3' <- runCompiler $ compile exp3
-        s <- get
-        let i     = n s
-            false = "_if_false" ++ show i
-            end   = "_if_end" ++ show i
-        put $ s { n = i + 1 }
+        [false, end] <- getSymbols ["_if_false", "_if_end"]
         return $ exp1'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ false

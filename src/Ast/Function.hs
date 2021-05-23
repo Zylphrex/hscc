@@ -1,7 +1,6 @@
 module Ast.Function ( Function(..) ) where
 
 import Control.Applicative ( Alternative((<|>)), many )
-import Control.Monad.State ( get, put )
 import Data.Char ( isDigit, isLetter )
 import Data.Functor (($>))
 import Text.PrettyPrint ( colon, empty, nest, parens, space, text, vcat, ($$) )
@@ -14,6 +13,9 @@ import Ast.BlockItem ( BlockItem(StatementItem)
 import Ast.Type ( Type )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
+                , getState
+                , setState
+                , resetIndex
                 , runCompiler
                 , stackIndex
                 )
@@ -54,12 +56,12 @@ instance Parse Function where
 instance Compile Function where
     compile (Function returnType identifier arguments body) = Compiler $ do
         -- set the stack index to 0 when entering a function
-        state <- get
-        put $ state { stackIndex = 0}
+        state <- getState
+        resetIndex
         identifier' <- runCompiler $ compile identifier
         body' <- runCompiler $ traverse compile body
         -- restore the stack frame and index when exiting a function
-        put state
+        setState state
         return $ concat $ [ "\t.globl\t" ++ head identifier'
                           , head identifier' ++ ":"
                           -- save the stackframe base pointer

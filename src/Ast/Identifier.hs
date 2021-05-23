@@ -1,14 +1,13 @@
 module Ast.Identifier ( Identifier, fromIdentifier, toIdentifier ) where
 
 import Control.Applicative ( empty )
-import Control.Monad.State ( get )
 import Data.Char ( isDigit, isLetter )
 import Text.PrettyPrint ( text )
 
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
                 , Os(Darwin, Other)
-                , os
+                , getOs
                 )
 import Parser ( Parse(parse)
               , parseIf
@@ -38,11 +37,8 @@ instance Parse Identifier where
 
 instance Compile Identifier where
     compile (Identifier identifier) = Compiler $ do
-        s <- get
-        let identifier' = case os s of
-                              Darwin -> '_' : identifier
-                              Other  -> identifier
-        return [identifier']
+        os <- getOs
+        return [ if os == Darwin then '_' : identifier else identifier ]
 
 instance PrettyPrint Identifier  where
     prettyPrint (Identifier identifier) = text identifier
