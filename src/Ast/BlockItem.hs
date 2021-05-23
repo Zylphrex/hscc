@@ -1,10 +1,10 @@
 module Ast.BlockItem ( BlockItem(..), Statement(..) ) where
 
-import Control.Applicative as A ( Alternative(empty, (<|>)) )
-import Control.Monad ( when )
-import Control.Monad.State ( get, put )
+import Control.Applicative as A ( Alternative(empty, (<|>)), many )
+import Control.Monad ( mapM, when )
 import Data.Maybe ( fromJust, isJust )
-import Text.PrettyPrint as P ( empty
+import Text.PrettyPrint as P ( char
+                             , empty
                              , equals
                              , nest
                              , space
@@ -18,12 +18,10 @@ import Ast.Identifier ( Identifier, fromIdentifier )
 import Ast.Type ( Type, bytes )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
+                , getSymbols
                 , runCompiler
-                , stackFrame
-                , stackIndex
                 , isDeclared
                 , pushFrame
-                , n
                 )
 import Parser ( Parse(parse)
               , parseCharacter
@@ -57,17 +55,10 @@ instance Compile BlockItem where
         expression' <- if isJust mExpression
                        then runCompiler $ compile $ fromJust mExpression
                        else pure []
-        state <- get
         let identifier' = fromIdentifier identifier
-            stackFrame' = stackFrame state
-            stackIndex' = stackIndex state
-        when (isDeclared identifier' stackFrame')
-             (fail $ "Variable: " ++ identifier' ++ " is already declared")
-        let stackIndex'' = stackIndex' - bytes variableType
-            stackFrame'' = pushFrame (identifier', stackIndex'') stackFrame'
-        put $ state { stackFrame = stackFrame''
-                    , stackIndex = stackIndex''
-                    }
+        alreadyDeclared <- isDeclared identifier'
+        when alreadyDeclared $ fail $ "Variable: " ++ identifier' ++ " is already declared"
+        pushFrame identifier' $ bytes variableType
         return $ expression'
               ++ [ "\tpush\t%rax" ]
 
@@ -105,7 +96,7 @@ instance Parse Statement where
                             <* parseSpaces
                             <* parseCharacter ')'
                             )
-                        <*> ( parseSpaces *> parse)
+                        <*> ( parseSpaces *> parse )
                         <*> ( ( pure <$> (  parseNotNull parseSpaces
                                          *> parseString "else"
                                          *> parseNotNull parseSpaces
@@ -127,10 +118,7 @@ instance Compile Statement where
     compile (Conditional expression statement Nothing) = Compiler $ do
         expression' <- runCompiler $ compile expression
         statement' <- runCompiler $ compile statement
-        s <- get
-        let i   = n s
-            end = "_if_end" ++ show i
-        put $ s { n = i + 1 }
+        [end] <- getSymbols ["_if_end"]
         return $ expression'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ end
@@ -141,11 +129,7 @@ instance Compile Statement where
         expression' <- runCompiler $ compile expression
         statement1' <- runCompiler $ compile statement1
         statement2' <- runCompiler $ compile statement2
-        s <- get
-        let i     = n s
-            false = "_if_false" ++ show i
-            end   = "_if_end" ++ show i
-        put $ s { n = i + 1 }
+        [false, end] <- getSymbols ["_if_false", "_if_end"]
         return $ expression'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tje " ++ false
@@ -156,6 +140,7 @@ instance Compile Statement where
                  ]
               ++ statement2'
               ++ [ end ++ ":" ]
+
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
