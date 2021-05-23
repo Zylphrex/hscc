@@ -58,9 +58,7 @@ resetIndex = do
     setState $ state { stackIndex = 0 }
 
 getOs :: CompilerStateT Os
-getOs = do
-    state <- getState
-    return $ os state
+getOs = os <$> getState
 
 getSymbols :: [String] -> CompilerStateT [String]
 getSymbols prefixes = do
