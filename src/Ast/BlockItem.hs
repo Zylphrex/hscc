@@ -1,14 +1,20 @@
-module Ast.BlockItem ( BlockItem(..) ) where
+module Ast.BlockItem ( BlockItem(..), Statement(..) ) where
 
+import Control.Applicative as A ( Alternative(empty, (<|>)) )
 import Control.Monad ( when )
 import Control.Monad.State ( get, put )
-import Control.Applicative as A ( Alternative(empty, (<|>)) )
 import Data.Maybe ( fromJust, isJust )
-import Text.PrettyPrint as P ( empty, equals, space, text )
+import Text.PrettyPrint as P ( empty
+                             , equals
+                             , nest
+                             , space
+                             , text
+                             , vcat
+                             , ($$)
+                             )
 
 import Ast.Expression ( Expression )
 import Ast.Identifier ( Identifier, fromIdentifier )
-import Ast.Statement ( Statement )
 import Ast.Type ( Type, bytes )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
@@ -17,35 +23,37 @@ import Compiler ( Compiler(Compiler)
                 , stackIndex
                 , isDeclared
                 , pushFrame
+                , n
                 )
 import Parser ( Parse(parse)
               , parseCharacter
               , parseSpaces
+              , parseString
               , parseNotNull
               )
 import Pretty ( PrettyPrint(prettyPrint) )
 
-data BlockItem = Statement Statement
-               | Declaration Type Identifier (Maybe Expression)
+data BlockItem = StatementItem Statement
+               | DeclarationItem Type Identifier (Maybe Expression)
     deriving (Eq, Show)
 
 instance Parse BlockItem where
-    parse = Statement <$> parse
-        <|> Declaration <$> parse
-                        <*> (parseNotNull parseSpaces *> parse)
-                        <*> ( ( ( pure <$> (  parseSpaces
-                                           *> parseCharacter '='
-                                           *> parseSpaces
-                                           *> parse
-                                           )
-                              ) <|> pure A.empty )
-                              <* parseSpaces
-                              <* parseCharacter ';'
-                            )
+    parse = StatementItem <$> parse
+        <|> DeclarationItem <$> parse
+                            <*> (parseNotNull parseSpaces *> parse)
+                            <*> ( ( ( pure <$> (  parseSpaces
+                                               *> parseCharacter '='
+                                               *> parseSpaces
+                                               *> parse
+                                               )
+                                  ) <|> pure A.empty )
+                                  <* parseSpaces
+                                  <* parseCharacter ';'
+                                )
 
 instance Compile BlockItem where
-    compile (Statement statement) = compile statement
-    compile (Declaration variableType identifier mExpression) = Compiler $ do
+    compile (StatementItem statement) = compile statement
+    compile (DeclarationItem variableType identifier mExpression) = Compiler $ do
         expression' <- if isJust mExpression
                        then runCompiler $ compile $ fromJust mExpression
                        else pure []
@@ -64,8 +72,8 @@ instance Compile BlockItem where
               ++ [ "\tpush\t%rax" ]
 
 instance PrettyPrint BlockItem where
-    prettyPrint (Statement statement) = prettyPrint statement
-    prettyPrint (Declaration variableType identifier mExpression) =
+    prettyPrint (StatementItem statement) = prettyPrint statement
+    prettyPrint (DeclarationItem variableType identifier mExpression) =
          prettyPrint variableType
       <> P.space
       <> P.text (fromIdentifier identifier)
@@ -75,3 +83,86 @@ instance PrettyPrint BlockItem where
             <> P.space
             <> prettyPrint (fromJust mExpression)
          else P.empty
+
+data Statement = Return Expression
+               | Expression Expression
+               | Conditional Expression Statement (Maybe Statement)
+    deriving (Eq, Show)
+
+instance Parse Statement where
+    parse = Return <$> (  parseString "return"
+                       *> parseNotNull parseSpaces
+                       *> parse
+                       <* parseSpaces
+                       <* parseCharacter ';'
+                       )
+        <|> Expression <$> parse <* parseSpaces <* parseCharacter ';'
+        <|> Conditional <$> (  parseString "if"
+                            *> parseSpaces
+                            *> parseCharacter '('
+                            *> parseSpaces
+                            *> parse
+                            <* parseSpaces
+                            <* parseCharacter ')'
+                            )
+                        <*> ( parseSpaces *> parse)
+                        <*> ( ( pure <$> (  parseNotNull parseSpaces
+                                         *> parseString "else"
+                                         *> parseNotNull parseSpaces
+                                         *> parse
+                                         )
+                            ) <|> pure A.empty )
+
+instance Compile Statement where
+    compile (Return expression) = Compiler $ do
+        expression' <- runCompiler $ compile expression
+        return $ expression'
+                 -- restore the current stackframe pointer
+              ++ [ "\tmovq\t%rbp, %rsp"
+                 -- restore the stackframe base pointer
+                 , "\tpop\t%rbp"
+                 , "\tretq"
+                 ]
+    compile (Expression expression) = Compiler $ runCompiler $ compile expression
+    compile (Conditional expression statement Nothing) = Compiler $ do
+        expression' <- runCompiler $ compile expression
+        statement' <- runCompiler $ compile statement
+        s <- get
+        let i   = n s
+            end = "_if_end" ++ show i
+        put $ s { n = i + 1 }
+        return $ expression'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tje " ++ end
+                 ]
+              ++ statement'
+              ++ [ end ++ ":" ]
+    compile (Conditional expression statement1 (Just statement2)) = Compiler $ do
+        expression' <- runCompiler $ compile expression
+        statement1' <- runCompiler $ compile statement1
+        statement2' <- runCompiler $ compile statement2
+        s <- get
+        let i     = n s
+            false = "_if_false" ++ show i
+            end   = "_if_end" ++ show i
+        put $ s { n = i + 1 }
+        return $ expression'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tje " ++ false
+                 ]
+              ++ statement1'
+              ++ [ "\tjmp " ++ end
+                 , false ++ ":"
+                 ]
+              ++ statement2'
+              ++ [ end ++ ":" ]
+
+instance PrettyPrint Statement where
+    prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
+    prettyPrint (Expression expression) = prettyPrint expression
+    prettyPrint (Conditional expression statement Nothing) =
+        text "IF" <> space <> prettyPrint expression $$ nest 4 (prettyPrint statement)
+    prettyPrint (Conditional expression statement1 (Just statement2)) =
+        vcat [ text "IF" <> space <> prettyPrint expression $$ nest 4 (prettyPrint statement1)
+             , text "ELSE" $$ nest 4 (prettyPrint statement2)
+             ]

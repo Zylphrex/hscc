@@ -7,7 +7,7 @@ import Test.Hspec
 
 import Ast.Expression ( Expression(Int64) )
 import Ast.Identifier ( toIdentifier )
-import Ast.Statement ( Statement(..) )
+import Ast.BlockItem ( Statement(..) )
 import Ast.Type ( Type(..) )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(render) )
