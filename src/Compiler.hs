@@ -104,7 +104,7 @@ popDeclared :: CompilerStateT [String]
 popDeclared = do
     state <- getState
     let count = length $ declared state
-    return $ take count $ repeat "\tpop\t%rax"
+    return $ replicate count "\tpop\t%rax"
 
 isDeclared :: String -> CompilerStateT Bool
 isDeclared key = do
