@@ -40,6 +40,7 @@ data CompilerState = CompilerState
     , stackFrame :: StackFrame
     , stackIndex :: Int
     , declared :: [String]
+    , bytes :: Int
     } deriving (Eq, Show)
 
 instance Default CompilerState where
@@ -48,6 +49,7 @@ instance Default CompilerState where
                         , stackFrame = StackFrame []
                         , stackIndex = 0
                         , declared = []
+                        , bytes = 0
                         }
 
 type CompilerStateT a = StateT CompilerState Maybe a
@@ -79,32 +81,34 @@ getOffset key = do
     let StackFrame sf = stackFrame state
     return $ lookup key sf
 
-getStackFrame :: CompilerStateT (StackFrame, Int, [String])
+getStackFrame :: CompilerStateT (StackFrame, Int, [String], Int)
 getStackFrame = do
     state <- getState
     let sf = stackFrame state
         si = stackIndex state
         d  = declared state
-    return (sf, si, d)
+        b  = bytes state
+    return (sf, si, d, b)
 
-setStackFrame :: (StackFrame, Int, [String]) -> CompilerStateT ()
-setStackFrame (sf, si, d) = do
+setStackFrame :: (StackFrame, Int, [String], Int) -> CompilerStateT ()
+setStackFrame (sf, si, d, b) = do
     state <- getState
     setState $ state { stackFrame = sf
                      , stackIndex = si
-                     , declared = d
+                     , declared   = d
+                     , bytes      = b
                      }
 
 clearDeclared :: CompilerStateT ()
 clearDeclared = do
     state <- getState
-    setState $ state { declared = [] }
+    setState $ state { declared = [], bytes = 0 }
 
 popDeclared :: CompilerStateT [String]
 popDeclared = do
     state <- getState
-    let count = length $ declared state
-    return $ replicate count "\tpop\t%rax"
+    let bytesUsed = show $ bytes state
+    return [ "\taddq\t$" ++ bytesUsed ++ ", %rsp" ]
 
 isDeclared :: String -> CompilerStateT Bool
 isDeclared key = do
@@ -117,9 +121,11 @@ pushFrame key size = do
     let StackFrame sf = stackFrame state
         index = stackIndex state - size
         declaredNames = declared state
+        bytesUsed = bytes state
     setState $ state { stackFrame = StackFrame ((key, index) : sf)
                      , stackIndex = index
                      , declared = key : declaredNames
+                     , bytes = bytesUsed + size
                      }
 
 newtype Compiler a = Compiler

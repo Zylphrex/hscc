@@ -849,6 +849,7 @@ spec = do
                                          , "\tmovq\t%rbp, %rsp"
                                          , "\tpop\t%rbp"
                                          , "\tretq"
+                                         , "\taddq\t$0, %rsp"
                                          ]
 
             it "translates programs with compound statement with variable shadowing" $ do
@@ -876,7 +877,7 @@ spec = do
                                          , "\tpush\t%rax"
                                          , "\tmovq\t$2, %rax"
                                          , "\tpush\t%rax"
-                                         , "\tpop\t%rax"
+                                         , "\taddq\t$8, %rsp"
                                          , "\tmovq\t$3, %rax"
                                          , "\tpush\t%rax"
                                          , "\tmovq\t-16(%rbp), %rax"
