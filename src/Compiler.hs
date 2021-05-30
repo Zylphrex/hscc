@@ -5,6 +5,10 @@ module Compiler ( Compiler(Compiler)
                 , stackIndex
                 , getState
                 , setState
+                , getStackFrame
+                , setStackFrame
+                , clearDeclared
+                , popDeclared
                 , resetIndex
                 , getOffset
                 , getOs
@@ -35,6 +39,7 @@ data CompilerState = CompilerState
     , n :: Int
     , stackFrame :: StackFrame
     , stackIndex :: Int
+    , declared :: [String]
     } deriving (Eq, Show)
 
 instance Default CompilerState where
@@ -42,6 +47,7 @@ instance Default CompilerState where
                         , n = 0
                         , stackFrame = StackFrame []
                         , stackIndex = 0
+                        , declared = []
                         }
 
 type CompilerStateT a = StateT CompilerState Maybe a
@@ -73,18 +79,47 @@ getOffset key = do
     let StackFrame sf = stackFrame state
     return $ lookup key sf
 
+getStackFrame :: CompilerStateT (StackFrame, Int, [String])
+getStackFrame = do
+    state <- getState
+    let sf = stackFrame state
+        si = stackIndex state
+        d  = declared state
+    return (sf, si, d)
+
+setStackFrame :: (StackFrame, Int, [String]) -> CompilerStateT ()
+setStackFrame (sf, si, d) = do
+    state <- getState
+    setState $ state { stackFrame = sf
+                     , stackIndex = si
+                     , declared = d
+                     }
+
+clearDeclared :: CompilerStateT ()
+clearDeclared = do
+    state <- getState
+    setState $ state { declared = [] }
+
+popDeclared :: CompilerStateT [String]
+popDeclared = do
+    state <- getState
+    let count = length $ declared state
+    return $ take count $ repeat "\tpop\t%rax"
+
 isDeclared :: String -> CompilerStateT Bool
 isDeclared key = do
-    mOffset <- getOffset key
-    return $ isJust mOffset
+    state <- getState
+    return $ key `elem` declared state
 
 pushFrame :: String -> Int -> CompilerStateT ()
 pushFrame key size = do
     state <- getState
     let StackFrame sf = stackFrame state
         index = stackIndex state - size
+        declaredNames = declared state
     setState $ state { stackFrame = StackFrame ((key, index) : sf)
                      , stackIndex = index
+                     , declared = key : declaredNames
                      }
 
 newtype Compiler a = Compiler

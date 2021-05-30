@@ -5,8 +5,10 @@ module Ast.StatementSpec ( spec ) where
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
 
-import Ast.Expression ( Expression(Int64) )
-import Ast.BlockItem ( Statement(..) )
+import Ast.BlockItem ( BlockItem(..), Statement(..) )
+import Ast.Expression ( Expression(..) )
+import Ast.Identifier ( toIdentifier )
+import Ast.Type ( Type(..) )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(render) )
 
@@ -60,6 +62,10 @@ spec = do
                     return2 = Return $ Int64 10
                 mResult `shouldBe` pure (Conditional (Int64 1) return1 $ Just return2, read "")
 
+            it "parse compound statement" $ do
+                let mResult = tryParser (parse :: Parser Statement) "{return 0;}"
+                mResult `shouldBe` pure (Compound [StatementItem $ Return $ Int64 0], read "")
+
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
                 let statement = Return $ Int64 124
@@ -86,3 +92,29 @@ spec = do
                         , "    RETURN 10"
                         ]
                 render statement `shouldBe` rendered
+
+            it "should render compound statement" $ do
+                let a = toIdentifier "a"
+                    statement = Compound [ DeclarationItem Int a Nothing
+                                         , StatementItem $ Return $ Variable a
+                                         ]
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "{   INT a"
+                        , "    RETURN a"
+                        , "}"
+                        ]
+                render statement `shouldBe` rendered
+
+            it "should render compound statement in conditional statement" $ do
+                let statement1 = Compound [ StatementItem $ Return $ Int64 1 ]
+                    statement2 = Compound [ StatementItem $ Return $ Int64 2 ]
+                    statement3 = Conditional (Int64 1) statement1 $ Just statement2
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "IF 1 {"
+                        , "    RETURN 1"
+                        , "}"
+                        , "ELSE {"
+                        , "    RETURN 2"
+                        , "}"
+                        ]
+                render statement3 `shouldBe` rendered
