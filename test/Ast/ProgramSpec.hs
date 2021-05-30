@@ -808,10 +808,10 @@ spec = do
                 let expression = ConditionalExpression (Int64 1) (Int64 2) (Int64 3)
                     statement  = StatementItem $ Return expression
                     function   = Function { returnType = Int
-                                         , identifier = toIdentifier "main"
-                                         , arguments  = ()
-                                         , body       = [ statement ]
-                                         }
+                                          , identifier = toIdentifier "main"
+                                          , arguments  = ()
+                                          , body       = [ statement ]
+                                          }
                     program = Program function
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
@@ -826,6 +826,60 @@ spec = do
                                          , "_if_false0:"
                                          , "\tmovq\t$3, %rax"
                                          , "_if_end0:"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates program with compound statements" $ do
+                let statement = Return $ Int64 1
+                    compound  = StatementItem $ Compound [StatementItem statement]
+                    function  = Function { returnType = Int
+                                         , identifier = toIdentifier "main"
+                                         , arguments  = ()
+                                         , body       = [ compound ]
+                                         }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with compound statement with variable shadowing" $ do
+                let a          = toIdentifier "a"
+                    b          = toIdentifier "b"
+                    statement1 = DeclarationItem Int a $ Just $ Int64 1
+                    compound   = StatementItem $ Compound [ DeclarationItem Int a $ Just $ Int64 2 ]
+                    statement2 = DeclarationItem Int b $ Just $ Int64 3
+                    function   = Function { returnType = Int
+                                           , identifier = toIdentifier "main"
+                                           , arguments  = ()
+                                           , body       = [ statement1
+                                                          , compound
+                                                          , statement2
+                                                          , StatementItem $ Return $ Variable b
+                                                          ]
+                                           }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$2, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tpop\t%rax"
+                                         , "\tmovq\t$3, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-16(%rbp), %rax"
                                          , "\tmovq\t%rbp, %rsp"
                                          , "\tpop\t%rbp"
                                          , "\tretq"

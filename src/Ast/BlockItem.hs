@@ -18,6 +18,10 @@ import Ast.Identifier ( Identifier, fromIdentifier )
 import Ast.Type ( Type, bytes )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
+                , getStackFrame
+                , setStackFrame
+                , clearDeclared
+                , popDeclared
                 , getSymbols
                 , runCompiler
                 , isDeclared
@@ -78,6 +82,7 @@ instance PrettyPrint BlockItem where
 data Statement = Return Expression
                | Expression Expression
                | Conditional Expression Statement (Maybe Statement)
+               | Compound [BlockItem]
     deriving (Eq, Show)
 
 instance Parse Statement where
@@ -103,6 +108,10 @@ instance Parse Statement where
                                          *> parse
                                          )
                             ) <|> pure A.empty )
+        <|> Compound <$> (  parseCharacter '{'
+                         *> many (parseSpaces *> parse <* parseSpaces)
+                         <* parseCharacter '}'
+                         )
 
 instance Compile Statement where
     compile (Return expression) = Compiler $ do
@@ -140,14 +149,38 @@ instance Compile Statement where
                  ]
               ++ statement2'
               ++ [ end ++ ":" ]
-
+    compile (Compound items) = Compiler $ do
+        -- clear the set of declared names in the current scope
+        -- this allows for shadowing of declared names
+        stackFrame <- getStackFrame
+        clearDeclared
+        items' <- concat <$> (runCompiler . compile) `mapM` items
+        clear <- popDeclared
+        -- restore the set of declared names to what it was prior
+        -- to this compound statement
+        setStackFrame stackFrame
+        return $ items' ++ clear
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
     prettyPrint (Expression expression) = prettyPrint expression
-    prettyPrint (Conditional expression statement Nothing) =
-        text "IF" <> space <> prettyPrint expression $$ nest 4 (prettyPrint statement)
-    prettyPrint (Conditional expression statement1 (Just statement2)) =
-        vcat [ text "IF" <> space <> prettyPrint expression $$ nest 4 (prettyPrint statement1)
-             , text "ELSE" $$ nest 4 (prettyPrint statement2)
+    prettyPrint (Conditional expression statement elseStatement) = ifClause $$ elseClause
+      where ifClause = case statement of
+                Compound items -> vcat [ ifCondition <> space <> char '{'
+                                       , nest 4 $ vcat $ map prettyPrint items
+                                       , char '}'
+                                       ]
+                _ -> ifCondition $$ nest 4 (prettyPrint statement)
+              where ifCondition = text "IF" <> space <> prettyPrint expression
+            elseClause = case elseStatement of
+                Nothing -> P.empty
+                Just (Compound items) -> vcat [ text "ELSE" <> space <> char '{'
+                                              , nest 4 $ vcat $ map prettyPrint items
+                                              , char '}'
+                                              ]
+                Just s -> text "ELSE" $$ nest 4 (prettyPrint s)
+    prettyPrint (Compound items) =
+        vcat [ char '{'
+             , nest 4 $ vcat $ map prettyPrint items
+             , char '}'
              ]
