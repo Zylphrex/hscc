@@ -204,13 +204,14 @@ instance Compile Statement where
     compile (DoWhile statement expression) = Compiler $ do
         statement' <- runCompiler $ compile statement
         expression' <- runCompiler $ compile expression
-        [start, cond] <- getSymbols ["_do_start", "_do_cond"]
+        [start, cond, end] <- getSymbols ["_do_start", "_do_cond", "_do_end"]
         return $ [ start ++ ":" ]
               ++ statement'
               ++ [ cond ++ ":" ]
               ++ expression'
               ++ [ "\tcmpq\t$0, %rax"
                  , "\tjne " ++ start
+                 , end ++ ":"
                  ]
 
 instance PrettyPrint Statement where

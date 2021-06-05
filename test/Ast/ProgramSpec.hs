@@ -989,6 +989,7 @@ spec = do
                                          , "\tsetge\t%al"
                                          , "\tcmpq\t$0, %rax"
                                          , "\tjne _do_start0"
+                                         , "_do_end0:"
                                          , "\tmovq\t-8(%rbp), %rax"
                                          , "\tmovq\t%rbp, %rsp"
                                          , "\tpop\t%rbp"
