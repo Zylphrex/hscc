@@ -41,7 +41,7 @@ spec = do
                 render blockItem `shouldBe` "RETURN 124"
 
             it "should render expression statement block item" $ do
-                let blockItem = StatementItem $ Expression $ Int64 124
+                let blockItem = StatementItem $ Expression $ Just $ Int64 124
                 render blockItem `shouldBe` "124"
 
             it "should render declaration block item without assignment" $ do
