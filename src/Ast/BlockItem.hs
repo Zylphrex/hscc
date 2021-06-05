@@ -80,9 +80,11 @@ instance PrettyPrint BlockItem where
          else P.empty
 
 data Statement = Return Expression
-               | Expression (Maybe Expression)
                | Conditional Expression Statement (Maybe Statement)
                | Compound [BlockItem]
+               | While Expression Statement
+               | DoWhile Statement Expression
+               | Expression (Maybe Expression)
     deriving (Eq, Show)
 
 instance Parse Statement where
@@ -92,8 +94,6 @@ instance Parse Statement where
                        <* parseSpaces
                        <* parseCharacter ';'
                        )
-        <|> Expression <$> ( Just <$> parse <|> pure Nothing ) <* parseSpaces
-                           <* parseCharacter ';'
         <|> Conditional <$> (  parseString "if"
                             *> parseSpaces
                             *> parseCharacter '('
@@ -113,6 +113,32 @@ instance Parse Statement where
                          *> many (parseSpaces *> parse <* parseSpaces)
                          <* parseCharacter '}'
                          )
+        <|> While <$> (  parseString "while"
+                      *> parseSpaces
+                      *> parseCharacter '('
+                      *> parseSpaces
+                      *> parse
+                      <* parseSpaces
+                      <* parseCharacter ')'
+                      )
+                  <*> ( parseSpaces *> parse )
+        <|> DoWhile <$> (  parseString "do"
+                        *> parseSpaces
+                        *> parse
+                        )
+                    <*> (  parseSpaces
+                        *> parseString "while"
+                        *> parseSpaces
+                        *> parseCharacter '('
+                        *> parseSpaces
+                        *> parse
+                        <* parseSpaces
+                        <* parseCharacter ')'
+                        <* parseSpaces
+                        <* parseCharacter ';'
+                        )
+        <|> Expression <$> ( Just <$> parse <|> pure Nothing ) <* parseSpaces
+                           <* parseCharacter ';'
 
 instance Compile Statement where
     compile (Return expression) = Compiler $ do
@@ -162,6 +188,30 @@ instance Compile Statement where
         -- to this compound statement
         setStackFrame stackFrame
         return $ items' ++ clear
+    compile (While expression statement) = Compiler $ do
+        expression' <- runCompiler $ compile expression
+        statement' <- runCompiler $ compile statement
+        [cond, end] <- getSymbols ["_while_cond", "_while_end"]
+        return $ [ cond ++ ":" ]
+              ++ expression'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tje " ++ end
+                 ]
+              ++ statement'
+              ++ [ "\tjmp " ++ cond
+                 , end ++ ":"
+                 ]
+    compile (DoWhile statement expression) = Compiler $ do
+        statement' <- runCompiler $ compile statement
+        expression' <- runCompiler $ compile expression
+        [start, cond] <- getSymbols ["_do_start", "_do_cond"]
+        return $ [ start ++ ":" ]
+              ++ statement'
+              ++ [ cond ++ ":" ]
+              ++ expression'
+              ++ [ "\tcmpq\t$0, %rax"
+                 , "\tjne " ++ start
+                 ]
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
@@ -186,4 +236,13 @@ instance PrettyPrint Statement where
         vcat [ char '{'
              , nest 4 $ vcat $ map prettyPrint items
              , char '}'
+             ]
+    prettyPrint (While expression statement) =
+        vcat [ text "WHILE" <> space <> prettyPrint expression
+             , nest 4 $ prettyPrint statement
+             ]
+    prettyPrint (DoWhile statement expression) =
+        vcat [ text "DO"
+             , nest 4 $ prettyPrint statement
+             , text "WHILE" <> space <> prettyPrint expression
              ]
