@@ -574,7 +574,7 @@ spec = do
                 let a          = toIdentifier "a"
                     b          = toIdentifier "b"
                     statement1 = DeclarationItem Int a Nothing
-                    statement2 = StatementItem $ Expression $ AssignmentExpression a Assignment $ Int64 1
+                    statement2 = StatementItem $ Expression $ Just $ AssignmentExpression a Assignment $ Int64 1
                     statement3 = DeclarationItem Int b $ Just $ Int64 2
                     statement4 = StatementItem $ Return $ BinaryExpression (Variable a) Addition (Variable b)
                     function = Function { returnType = Int
@@ -609,16 +609,16 @@ spec = do
 
             it "translates programs with compound assignment operators" $ do
                 let a = toIdentifier "a"
-                    exp0 = Expression $ AssignmentExpression a MultiplicationAssignment $ Int64 1
-                    exp1 = Expression $ AssignmentExpression a DivisionAssignment $ Int64 1
-                    exp2 = Expression $ AssignmentExpression a ModulusAssignment $ Int64 1
-                    exp3 = Expression $ AssignmentExpression a AdditionAssignment $ Int64 1
-                    exp4 = Expression $ AssignmentExpression a SubtractionAssignment $ Int64 1
-                    exp5 = Expression $ AssignmentExpression a BitwiseShiftLeftAssignment $ Int64 1
-                    exp6 = Expression $ AssignmentExpression a BitwiseShiftRightAssignment $ Int64 1
-                    exp7 = Expression $ AssignmentExpression a BitwiseOrAssignment $ Int64 1
-                    exp8 = Expression $ AssignmentExpression a BitwiseAndAssignment $ Int64 1
-                    exp9 = Expression $ AssignmentExpression a BitwiseXorAssignment $ Int64 1
+                    exp0 = Expression $ Just $ AssignmentExpression a MultiplicationAssignment $ Int64 1
+                    exp1 = Expression $ Just $ AssignmentExpression a DivisionAssignment $ Int64 1
+                    exp2 = Expression $ Just $ AssignmentExpression a ModulusAssignment $ Int64 1
+                    exp3 = Expression $ Just $ AssignmentExpression a AdditionAssignment $ Int64 1
+                    exp4 = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
+                    exp5 = Expression $ Just $ AssignmentExpression a BitwiseShiftLeftAssignment $ Int64 1
+                    exp6 = Expression $ Just $ AssignmentExpression a BitwiseShiftRightAssignment $ Int64 1
+                    exp7 = Expression $ Just $ AssignmentExpression a BitwiseOrAssignment $ Int64 1
+                    exp8 = Expression $ Just $ AssignmentExpression a BitwiseAndAssignment $ Int64 1
+                    exp9 = Expression $ Just $ AssignmentExpression a BitwiseXorAssignment $ Int64 1
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
@@ -718,7 +718,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ StatementItem $ Expression assignment
+                                        , body       = [ StatementItem $ Expression $ Just assignment
                                                        , StatementItem $ Return $ Int64 1
                                                        ]
                                         }

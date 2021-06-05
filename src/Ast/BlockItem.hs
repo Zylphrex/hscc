@@ -80,7 +80,7 @@ instance PrettyPrint BlockItem where
          else P.empty
 
 data Statement = Return Expression
-               | Expression Expression
+               | Expression (Maybe Expression)
                | Conditional Expression Statement (Maybe Statement)
                | Compound [BlockItem]
     deriving (Eq, Show)
@@ -92,7 +92,8 @@ instance Parse Statement where
                        <* parseSpaces
                        <* parseCharacter ';'
                        )
-        <|> Expression <$> parse <* parseSpaces <* parseCharacter ';'
+        <|> Expression <$> ( Just <$> parse <|> pure Nothing ) <* parseSpaces
+                           <* parseCharacter ';'
         <|> Conditional <$> (  parseString "if"
                             *> parseSpaces
                             *> parseCharacter '('
@@ -123,7 +124,8 @@ instance Compile Statement where
                  , "\tpop\t%rbp"
                  , "\tretq"
                  ]
-    compile (Expression expression) = Compiler $ runCompiler $ compile expression
+    compile (Expression (Just expression)) = Compiler $ runCompiler $ compile expression
+    compile (Expression Nothing) = Compiler $ return []
     compile (Conditional expression statement Nothing) = Compiler $ do
         expression' <- runCompiler $ compile expression
         statement' <- runCompiler $ compile statement
@@ -163,7 +165,8 @@ instance Compile Statement where
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
-    prettyPrint (Expression expression) = prettyPrint expression
+    prettyPrint (Expression (Just expression)) = prettyPrint expression
+    prettyPrint (Expression Nothing) = text "NOOP"
     prettyPrint (Conditional expression statement elseStatement) = ifClause $$ elseClause
       where ifClause = case statement of
                 Compound items -> vcat [ ifCondition <> space <> char '{'

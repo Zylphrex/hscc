@@ -46,11 +46,15 @@ spec = do
 
             it "parses expression statement" $ do
                 let mResult = tryParser (parse :: Parser Statement) "124;"
-                mResult `shouldBe` pure (Expression $ Int64 124, read "")
+                mResult `shouldBe` pure (Expression $ Just $ Int64 124, read "")
 
             it "parses expression statement and leaves the rest" $ do
                 let mResult = tryParser (parse :: Parser Statement) "124;stuff"
-                mResult `shouldBe` pure (Expression $ Int64 124, read "stuff")
+                mResult `shouldBe` pure (Expression $ Just $ Int64 124, read "stuff")
+
+            it "parses empty expression statement" $ do
+                let mResult = tryParser (parse :: Parser Statement) ";"
+                mResult `shouldBe` pure (Expression $ Nothing, read "")
 
             it "parse if statement without else" $ do
                 let mResult = tryParser (parse :: Parser Statement) "if (1) return 5;"
@@ -72,8 +76,12 @@ spec = do
                 render statement `shouldBe` "RETURN 124"
 
             it "should render expression statement" $ do
-                let statement = Expression $ Int64 124
+                let statement = Expression $ Just $ Int64 124
                 render statement `shouldBe` "124"
+
+            it "should render empty expression statement" $ do
+                let statement = Expression Nothing
+                render statement `shouldBe` "NOOP"
 
             it "should render condition statement without else" $ do
                 let statement = Conditional (Int64 1) (Return (Int64 5)) Nothing
