@@ -70,6 +70,14 @@ spec = do
                 let mResult = tryParser (parse :: Parser Statement) "{return 0;}"
                 mResult `shouldBe` pure (Compound [StatementItem $ Return $ Int64 0], read "")
 
+            it "parses while loops" $ do
+                let mResult = tryParser (parse :: Parser Statement) "while (0) ;"
+                mResult `shouldBe` pure (While (Int64 0) (Expression Nothing), read "")
+
+            it "parses do while loops" $ do
+                let mResult = tryParser (parse :: Parser Statement) "do ; while (0);"
+                mResult `shouldBe` pure (DoWhile (Expression Nothing) (Int64 0), read "")
+
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
                 let statement = Return $ Int64 124
@@ -126,3 +134,19 @@ spec = do
                         , "}"
                         ]
                 render statement3 `shouldBe` rendered
+
+            it "should render while loops" $ do
+                let while = While (Int64 0) (Expression Nothing)
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "WHILE 0"
+                        , "    NOOP"
+                        ]
+                render while `shouldBe` rendered
+
+            it "should render do while loops" $ do
+                let while = DoWhile (Expression Nothing) (Int64 0)
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "DO  NOOP"
+                        , "WHILE 0"
+                        ]
+                render while `shouldBe` rendered

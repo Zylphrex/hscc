@@ -879,14 +879,14 @@ spec = do
                     compound   = StatementItem $ Compound [ DeclarationItem Int a $ Just $ Int64 2 ]
                     statement2 = DeclarationItem Int b $ Just $ Int64 3
                     function   = Function { returnType = Int
-                                           , identifier = toIdentifier "main"
-                                           , arguments  = ()
-                                           , body       = [ statement1
-                                                          , compound
-                                                          , statement2
-                                                          , StatementItem $ Return $ Variable b
-                                                          ]
-                                           }
+                                          , identifier = toIdentifier "main"
+                                          , arguments  = ()
+                                          , body       = [ statement1
+                                                         , compound
+                                                         , statement2
+                                                         , StatementItem $ Return $ Variable b
+                                                         ]
+                                          }
                     program = Program function
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
@@ -901,6 +901,96 @@ spec = do
                                          , "\tmovq\t$3, %rax"
                                          , "\tpush\t%rax"
                                          , "\tmovq\t-16(%rbp), %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with while loops" $ do
+                let a         = toIdentifier "a"
+                    statement = DeclarationItem Int a $ Just $ Int64 5
+                    condition = BinaryExpression (Variable a) GreaterThanEquals (Int64 0)
+                    loopBody  = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
+                    function  = Function { returnType = Int
+                                         , identifier = toIdentifier "main"
+                                         , arguments  = ()
+                                         , body       = [ statement
+                                                        , StatementItem $ While condition loopBody
+                                                        , StatementItem $ Return $ Variable a
+                                                        ]
+                                         }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$5, %rax"
+                                         , "\tpush\t%rax"
+                                         , "_while_cond0:"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tcmpq\t%rax, %rcx"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tsetge\t%al"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _while_end0"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsubq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tjmp _while_cond0"
+                                         , "_while_end0:"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with do while loops" $ do
+                let a         = toIdentifier "a"
+                    statement = DeclarationItem Int a $ Just $ Int64 5
+                    condition = BinaryExpression (Variable a) GreaterThanEquals (Int64 0)
+                    loopBody  = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
+                    function  = Function { returnType = Int
+                                         , identifier = toIdentifier "main"
+                                         , arguments  = ()
+                                         , body       = [ statement
+                                                        , StatementItem $ DoWhile loopBody condition
+                                                        , StatementItem $ Return $ Variable a
+                                                        ]
+                                         }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$5, %rax"
+                                         , "\tpush\t%rax"
+                                         , "_do_start0:"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tsubq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "_do_cond0:"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tcmpq\t%rax, %rcx"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tsetge\t%al"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tjne _do_start0"
+                                         , "_do_end0:"
+                                         , "\tmovq\t-8(%rbp), %rax"
                                          , "\tmovq\t%rbp, %rsp"
                                          , "\tpop\t%rbp"
                                          , "\tretq"
