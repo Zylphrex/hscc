@@ -50,11 +50,31 @@ spec = do
                 mResult `shouldBe` pure (program, read "ccc")
 
         describe "Compile" $ do
-            it "compiles simple program" $ do
+            it "translates simple program" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
                                         , body       = [StatementItem $ Return $ Int64 124]
+                                        }
+                    program  = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tmovq\t$124, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates simple program with empty statement" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem $ Expression Nothing
+                                                       , StatementItem $ Return $ Int64 124
+                                                       ]
                                         }
                     program  = Program function
                     assembly = executeCompiler (compile program) def
