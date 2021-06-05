@@ -996,6 +996,79 @@ spec = do
                                          , "\tretq"
                                          ]
 
+            it "translates programs with for loops" $ do
+                let i        = toIdentifier "i"
+                    loop     = For (Just $ AssignmentExpression i Assignment (Int64 0))
+                                   (Just $ BinaryExpression (Variable i) LessThan (Int64 1))
+                                   (Just $ AssignmentExpression i AdditionAssignment (Int64 1))
+                                   (Expression Nothing)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ DeclarationItem Int i Nothing
+                                                       , StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "_for_cond0:"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\tcmpq\t%rax, %rcx"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tsetl\t%al"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _for_end0"
+                                         , "_for_next0:"
+                                         , "\tmovq\t-8(%rbp), %rax"
+                                         , "\tpush\t%rax"
+                                         , "\tmovq\t$1, %rax"
+                                         , "\tpop\t%rcx"
+                                         , "\taddq\t%rcx, %rax"
+                                         , "\tmovq\t%rax, -8(%rbp)"
+                                         , "\tjmp _for_cond0"
+                                         , "_for_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with empty for loops" $ do
+                let loop     = For Nothing Nothing Nothing (Expression Nothing)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_for_cond0:"
+                                         , "_for_next0:"
+                                         , "\tjmp _for_cond0"
+                                         , "_for_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int

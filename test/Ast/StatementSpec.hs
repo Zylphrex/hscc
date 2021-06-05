@@ -8,6 +8,7 @@ import Test.Hspec
 import Ast.BlockItem ( BlockItem(..), Statement(..) )
 import Ast.Expression ( Expression(..) )
 import Ast.Identifier ( toIdentifier )
+import Ast.Operator ( AssignmentOperator(..), BinaryOperator(..) )
 import Ast.Type ( Type(..) )
 import Parser ( Parser, Parse(parse), tryParser )
 import Pretty ( PrettyPrint(render) )
@@ -77,6 +78,20 @@ spec = do
             it "parses do while loops" $ do
                 let mResult = tryParser (parse :: Parser Statement) "do ; while (0);"
                 mResult `shouldBe` pure (DoWhile (Expression Nothing) (Int64 0), read "")
+
+            it "parses for loops" $ do
+                let mResult = tryParser (parse :: Parser Statement) "for (i = 0; i < 1; i += 1) ;"
+                    i = toIdentifier "i"
+                mResult `shouldBe` pure ( For (Just $ AssignmentExpression i Assignment (Int64 0))
+                                              (Just $ BinaryExpression (Variable i) LessThan (Int64 1))
+                                              (Just $ AssignmentExpression i AdditionAssignment (Int64 1))
+                                              (Expression Nothing)
+                                        , read ""
+                                        )
+
+            it "parses empty for loops" $ do
+                let mResult = tryParser (parse :: Parser Statement) "for (;;);"
+                mResult `shouldBe` pure (For Nothing Nothing Nothing (Expression Nothing), read "")
 
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
@@ -150,3 +165,23 @@ spec = do
                         , "WHILE 0"
                         ]
                 render while `shouldBe` rendered
+
+            it "should render for loops" $ do
+                let i = toIdentifier "i"
+                    for = For (Just $ AssignmentExpression i Assignment (Int64 0))
+                              (Just $ BinaryExpression (Variable i) LessThan (Int64 1))
+                              (Just $ AssignmentExpression i AdditionAssignment (Int64 1))
+                              (Expression Nothing)
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FOR ( i = 0 ; (i<1) ; i += 1 )"
+                        , "    NOOP"
+                        ]
+                render for `shouldBe` rendered
+
+            it "should render empty for loops" $ do
+                let for = For Nothing Nothing Nothing (Expression Nothing)
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FOR ( ; ; )"
+                        , "    NOOP"
+                        ]
+                render for `shouldBe` rendered
