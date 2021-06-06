@@ -6,6 +6,7 @@ import Data.Maybe ( fromJust, isJust )
 import Text.PrettyPrint as P ( char
                              , empty
                              , equals
+                             , hsep
                              , nest
                              , space
                              , text
@@ -82,6 +83,7 @@ instance PrettyPrint BlockItem where
 data Statement = Return Expression
                | Conditional Expression Statement (Maybe Statement)
                | Compound [BlockItem]
+               | For (Maybe Expression) (Maybe Expression) (Maybe Expression) Statement
                | While Expression Statement
                | DoWhile Statement Expression
                | Expression (Maybe Expression)
@@ -113,6 +115,21 @@ instance Parse Statement where
                          *> many (parseSpaces *> parse <* parseSpaces)
                          <* parseCharacter '}'
                          )
+        <|> do
+              _ <- parseString "for" *> parseSpaces *> parseCharacter '('
+              init <- parseSpaces
+                   *> (Just <$> parse <|> pure Nothing)
+                   <* parseSpaces
+                   <* parseCharacter ';'
+              condition <- parseSpaces
+                        *> (Just <$> parse <|> pure Nothing)
+                        <* parseSpaces
+                        <* parseCharacter ';'
+              step <- parseSpaces
+                   *> (Just <$> parse <|> pure Nothing)
+              _ <- parseSpaces *> parseCharacter ')'
+              statement <- parseSpaces *> parse
+              return $ For init condition step statement
         <|> While <$> (  parseString "while"
                       *> parseSpaces
                       *> parseCharacter '('
@@ -188,6 +205,31 @@ instance Compile Statement where
         -- to this compound statement
         setStackFrame stackFrame
         return $ items' ++ clear
+    compile (For minit mcondition mstep statement) = Compiler $ do
+        [next, cond, end] <- getSymbols ["_for_next", "_for_cond", "_for_end"]
+        init' <- case minit of
+                    Just init -> runCompiler $ compile init
+                    _ -> return []
+        condition' <- case mcondition of
+                        Just condition -> let jmp = [ "\tcmpq\t$0, %rax"
+                                                    , "\tje " ++ end
+                                                    ]
+                                          in (++ jmp) <$> (runCompiler $ compile condition)
+                        _ -> return []
+        step' <- case mstep of
+                    Just step -> runCompiler $ compile step
+                    _ -> return []
+        statement' <- runCompiler $ compile statement
+        return $ init'
+              ++ [ cond ++ ":" ]
+              ++ condition'
+              ++ statement'
+              ++ [ next ++ ":" ]
+              ++ step'
+              ++ [ "\tjmp " ++ cond
+                 , end ++ ":"
+                 ]
+
     compile (While expression statement) = Compiler $ do
         expression' <- runCompiler $ compile expression
         statement' <- runCompiler $ compile statement
@@ -238,6 +280,27 @@ instance PrettyPrint Statement where
              , nest 4 $ vcat $ map prettyPrint items
              , char '}'
              ]
+    prettyPrint (For minit mcondition mstep statement) =
+        vcat [ hsep [ text "FOR"
+                    , char '('
+                    , init'
+                    , char ';'
+                    , condition'
+                    , char ';'
+                    , step'
+                    , char ')'
+                    ]
+             , nest 4 $ prettyPrint statement
+             ]
+      where init' = case minit of
+                      Just init -> prettyPrint init
+                      _ -> P.empty
+            condition' = case mcondition of
+                            Just condition -> prettyPrint condition
+                            _ -> P.empty
+            step' = case mstep of
+                      Just step -> prettyPrint step
+                      _ -> P.empty
     prettyPrint (While expression statement) =
         vcat [ text "WHILE" <> space <> prettyPrint expression
              , nest 4 $ prettyPrint statement
