@@ -1376,7 +1376,7 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ StatementItem Break
+                                        , body       = [ StatementItem Continue
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
