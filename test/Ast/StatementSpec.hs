@@ -93,6 +93,25 @@ spec = do
                 let mResult = tryParser (parse :: Parser Statement) "for (;;);"
                 mResult `shouldBe` pure (For Nothing Nothing Nothing (Expression Nothing), read "")
 
+            it "parses for loops with declaration" $ do
+                let mResult = tryParser (parse :: Parser Statement) "for (int i = 0; i < 1; i += 1) ;"
+                    i = toIdentifier "i"
+                mResult `shouldBe` pure ( ForDeclaration (Just $ Declaration Int i (Just $ Int64 0))
+                                                         (Just $ BinaryExpression (Variable i) LessThan (Int64 1))
+                                                         (Just $ AssignmentExpression i AdditionAssignment (Int64 1))
+                                                         (Expression Nothing)
+                                        , read ""
+                                        )
+
+            it "parses empty for loops with Declaration" $ do
+                let mResult = tryParser (parse :: Parser Statement) "for (int i = 0;;);"
+                    i = toIdentifier "i"
+                mResult `shouldBe` pure ( ForDeclaration (Just $ Declaration Int i (Just $ Int64 0))
+                                                         Nothing Nothing
+                                                         (Expression Nothing)
+                                        , read ""
+                                        )
+
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
                 let statement = Return $ Int64 124
@@ -180,6 +199,26 @@ spec = do
 
             it "should render empty for loops" $ do
                 let for = For Nothing Nothing Nothing (Expression Nothing)
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FOR ( ; ; )"
+                        , "    NOOP"
+                        ]
+                render for `shouldBe` rendered
+
+            it "should render for loops with declaration" $ do
+                let i = toIdentifier "i"
+                    for = ForDeclaration (Just $ Declaration Int i (Just $ Int64 0))
+                                         (Just $ BinaryExpression (Variable i) LessThan (Int64 1))
+                                         (Just $ AssignmentExpression i AdditionAssignment (Int64 1))
+                                         (Expression Nothing)
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FOR ( INT i = 0 ; (i<1) ; i += 1 )"
+                        , "    NOOP"
+                        ]
+                render for `shouldBe` rendered
+
+            it "should render empty for loops with declaration" $ do
+                let for = ForDeclaration Nothing Nothing Nothing (Expression Nothing)
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
                         [ "FOR ( ; ; )"
                         , "    NOOP"

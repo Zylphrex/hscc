@@ -59,6 +59,7 @@ data Statement = Return Expression
                | Conditional Expression Statement (Maybe Statement)
                | Compound [BlockItem]
                | For (Maybe Expression) (Maybe Expression) (Maybe Expression) Statement
+               | ForDeclaration (Maybe Declaration) (Maybe Expression) (Maybe Expression) Statement
                | While Expression Statement
                | DoWhile Statement Expression
                | Expression (Maybe Expression)
@@ -105,6 +106,18 @@ instance Parse Statement where
               _ <- parseSpaces *> parseCharacter ')'
               statement <- parseSpaces *> parse
               return $ For init condition step statement
+        <|> do
+              _ <- parseString "for" *> parseSpaces *> parseCharacter '('
+              init <- parseSpaces *> (Just <$> parse <|> pure Nothing)
+              condition <- parseSpaces
+                        *> (Just <$> parse <|> pure Nothing)
+                        <* parseSpaces
+                        <* parseCharacter ';'
+              step <- parseSpaces
+                   *> (Just <$> parse <|> pure Nothing)
+              _ <- parseSpaces *> parseCharacter ')'
+              statement <- parseSpaces *> parse
+              return $ ForDeclaration init condition step statement
         <|> While <$> (  parseString "while"
                       *> parseSpaces
                       *> parseCharacter '('
@@ -204,7 +217,12 @@ instance Compile Statement where
               ++ [ "\tjmp " ++ cond
                  , end ++ ":"
                  ]
-
+    compile (ForDeclaration minit mcondition mstep statement) = Compiler $ do
+        init' <- case minit of
+                    Just init -> return [DeclarationItem init]
+                    _ -> return []
+        let loop = [ StatementItem $ For Nothing mcondition mstep statement ]
+        runCompiler $ compile $ Compound $ init' ++ loop
     compile (While expression statement) = Compiler $ do
         expression' <- runCompiler $ compile expression
         statement' <- runCompiler $ compile statement
@@ -256,6 +274,27 @@ instance PrettyPrint Statement where
              , char '}'
              ]
     prettyPrint (For minit mcondition mstep statement) =
+        vcat [ hsep [ text "FOR"
+                    , char '('
+                    , init'
+                    , char ';'
+                    , condition'
+                    , char ';'
+                    , step'
+                    , char ')'
+                    ]
+             , nest 4 $ prettyPrint statement
+             ]
+      where init' = case minit of
+                      Just init -> prettyPrint init
+                      _ -> P.empty
+            condition' = case mcondition of
+                            Just condition -> prettyPrint condition
+                            _ -> P.empty
+            step' = case mstep of
+                      Just step -> prettyPrint step
+                      _ -> P.empty
+    prettyPrint (ForDeclaration minit mcondition mstep statement) =
         vcat [ hsep [ text "FOR"
                     , char '('
                     , init'
