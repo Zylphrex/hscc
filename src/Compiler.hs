@@ -17,6 +17,9 @@ module Compiler ( Compiler(Compiler)
                 , pushFrame
                 , runCompiler
                 , executeCompiler
+                , setLoop
+                , getContinueTarget
+                , getBreakTarget
                 ) where
 
 import Control.Applicative ( Alternative((<|>), empty) )
@@ -41,6 +44,8 @@ data CompilerState = CompilerState
     , stackIndex :: Int
     , declared :: [String]
     , bytes :: Int
+    , continueTarget :: Maybe String
+    , breakTarget :: Maybe String
     } deriving (Eq, Show)
 
 instance Default CompilerState where
@@ -50,6 +55,8 @@ instance Default CompilerState where
                         , stackIndex = 0
                         , declared = []
                         , bytes = 0
+                        , continueTarget = Nothing
+                        , breakTarget = Nothing
                         }
 
 type CompilerStateT a = StateT CompilerState Maybe a
@@ -127,6 +134,22 @@ pushFrame key size = do
                      , declared = key : declaredNames
                      , bytes = bytesUsed + size
                      }
+
+setLoop :: (Maybe String, Maybe String) -> CompilerStateT (Maybe String, Maybe String)
+setLoop (continueTarget', breakTarget') = do
+    state <- getState
+    setState $ state { continueTarget = continueTarget', breakTarget = breakTarget' }
+    return (continueTarget state, breakTarget state)
+
+getContinueTarget :: CompilerStateT (Maybe String)
+getContinueTarget = do
+    state <- getState
+    return $ continueTarget state
+
+getBreakTarget :: CompilerStateT (Maybe String)
+getBreakTarget = do
+    state <- getState
+    return $ breakTarget state
 
 newtype Compiler a = Compiler
     { runCompiler :: CompilerStateT a
