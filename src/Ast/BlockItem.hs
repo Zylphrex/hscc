@@ -30,6 +30,9 @@ import Compiler ( Compiler(Compiler)
                 , runCompiler
                 , isDeclared
                 , pushFrame
+                , setLoop
+                , getContinueTarget
+                , getBreakTarget
                 )
 import Parser ( Parse(parse)
               , parseCharacter
@@ -62,6 +65,8 @@ data Statement = Return Expression
                | ForDeclaration (Maybe Declaration) (Maybe Expression) (Maybe Expression) Statement
                | While Expression Statement
                | DoWhile Statement Expression
+               | Break
+               | Continue
                | Expression (Maybe Expression)
     deriving (Eq, Show)
 
@@ -144,6 +149,8 @@ instance Parse Statement where
                         )
         <|> Expression <$> ( Just <$> parse <|> pure Nothing ) <* parseSpaces
                            <* parseCharacter ';'
+        <|> Break <$ parseString "break" <* parseSpaces <* parseCharacter ';'
+        <|> Continue <$ parseString "continue" <* parseSpaces <* parseCharacter ';'
 
 instance Compile Statement where
     compile (Return expression) = Compiler $ do
@@ -195,6 +202,7 @@ instance Compile Statement where
         return $ items' ++ clear
     compile (For minit mcondition mstep statement) = Compiler $ do
         [next, cond, end] <- getSymbols ["_for_next", "_for_cond", "_for_end"]
+        symbols <- setLoop (Just next, Just end)
         init' <- case minit of
                     Just init -> runCompiler $ compile init
                     _ -> return []
@@ -224,9 +232,11 @@ instance Compile Statement where
         let loop = [ StatementItem $ For Nothing mcondition mstep statement ]
         runCompiler $ compile $ Compound $ init' ++ loop
     compile (While expression statement) = Compiler $ do
+        [cond, end] <- getSymbols ["_while_cond", "_while_end"]
+        symbols <- setLoop (Just cond, Just end)
         expression' <- runCompiler $ compile expression
         statement' <- runCompiler $ compile statement
-        [cond, end] <- getSymbols ["_while_cond", "_while_end"]
+        _ <- setLoop symbols
         return $ [ cond ++ ":" ]
               ++ expression'
               ++ [ "\tcmpq\t$0, %rax"
@@ -237,9 +247,11 @@ instance Compile Statement where
                  , end ++ ":"
                  ]
     compile (DoWhile statement expression) = Compiler $ do
+        [start, cond, end] <- getSymbols ["_do_start", "_do_cond", "_do_end"]
+        symbols <- setLoop (Just cond, Just end)
         statement' <- runCompiler $ compile statement
         expression' <- runCompiler $ compile expression
-        [start, cond, end] <- getSymbols ["_do_start", "_do_cond", "_do_end"]
+        _ <- setLoop symbols
         return $ [ start ++ ":" ]
               ++ statement'
               ++ [ cond ++ ":" ]
@@ -248,6 +260,16 @@ instance Compile Statement where
                  , "\tjne " ++ start
                  , end ++ ":"
                  ]
+    compile Break = Compiler $ do
+        target <- getBreakTarget
+        case target of
+            Just target' -> return [ "\tjmp " ++ target' ]
+            _ -> fail "Not inside a loop"
+    compile Continue = Compiler $ do
+        target <- getContinueTarget
+        case target of
+            Just target' -> return [ "\tjmp " ++ target' ]
+            _ -> fail "Not inside a loop"
 
 instance PrettyPrint Statement where
     prettyPrint (Return expression) = text "RETURN" <> space <> prettyPrint expression
@@ -324,6 +346,8 @@ instance PrettyPrint Statement where
              , nest 4 $ prettyPrint statement
              , text "WHILE" <> space <> prettyPrint expression
              ]
+    prettyPrint Break = text "BREAK"
+    prettyPrint Continue = text "CONTINUE"
 
 data Declaration = Declaration Type Identifier (Maybe Expression)
     deriving (Eq, Show)

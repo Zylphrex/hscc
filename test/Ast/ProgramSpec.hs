@@ -1143,6 +1143,247 @@ spec = do
                                          , "\tretq"
                                          ]
 
+            it "translates programs with for loop with break" $ do
+                let loop = For Nothing Nothing Nothing Break
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_for_cond0:"
+                                         , "\tjmp _for_end0"
+                                         , "_for_next0:"
+                                         , "\tjmp _for_cond0"
+                                         , "_for_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with for loop with continue" $ do
+                let loop = For Nothing Nothing Nothing Continue
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_for_cond0:"
+                                         , "\tjmp _for_next0"
+                                         , "_for_next0:"
+                                         , "\tjmp _for_cond0"
+                                         , "_for_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with for loop with declaration with break" $ do
+                let loop = ForDeclaration Nothing Nothing Nothing Break
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_for_cond0:"
+                                         , "\tjmp _for_end0"
+                                         , "_for_next0:"
+                                         , "\tjmp _for_cond0"
+                                         , "_for_end0:"
+                                         , "\taddq\t$0, %rsp"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with for loop with declaration with continue" $ do
+                let loop = ForDeclaration Nothing Nothing Nothing Continue
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_for_cond0:"
+                                         , "\tjmp _for_next0"
+                                         , "_for_next0:"
+                                         , "\tjmp _for_cond0"
+                                         , "_for_end0:"
+                                         , "\taddq\t$0, %rsp"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with while loop with break" $ do
+                let loop = While (Int64 0) Break
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_while_cond0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _while_end0"
+                                         , "\tjmp _while_end0"
+                                         , "\tjmp _while_cond0"
+                                         , "_while_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with while loop with continue" $ do
+                let loop = While (Int64 0) Continue
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ] }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_while_cond0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tje _while_end0"
+                                         , "\tjmp _while_cond0"
+                                         , "\tjmp _while_cond0"
+                                         , "_while_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with do while loop with break" $ do
+                let loop = DoWhile Break (Int64 0)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_do_start0:"
+                                         , "\tjmp _do_end0"
+                                         , "_do_cond0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tjne _do_start0"
+                                         , "_do_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "translates programs with do while loop with continue" $ do
+                let loop = DoWhile Continue (Int64 0)
+                    function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem loop
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` pure [ "\t.globl\tmain"
+                                         , "main:"
+                                         , "\tpush\t%rbp"
+                                         , "\tmovq\t%rsp, %rbp"
+                                         , "_do_start0:"
+                                         , "\tjmp _do_cond0"
+                                         , "_do_cond0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tcmpq\t$0, %rax"
+                                         , "\tjne _do_start0"
+                                         , "_do_end0:"
+                                         , "\tmovq\t$0, %rax"
+                                         , "\tmovq\t%rbp, %rsp"
+                                         , "\tpop\t%rbp"
+                                         , "\tretq"
+                                         ]
+
+            it "does not allow break outside of loop" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem Break
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
+
+            it "does not allow continue outside of loop" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem Continue
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
+
         describe "PrettyPrint" $ do
             it "should render Program" $ do
                 let function = Function { returnType = Int

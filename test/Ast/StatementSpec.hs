@@ -112,6 +112,14 @@ spec = do
                                         , read ""
                                         )
 
+            it "parses loop with break" $ do
+                let mResult = tryParser (parse :: Parser Statement) "for (;;) break;"
+                mResult `shouldBe` pure (For Nothing Nothing Nothing Break, read "")
+
+            it "parses for loop with continue" $ do
+                let mResult = tryParser (parse :: Parser Statement) "for (;;) continue;"
+                mResult `shouldBe` pure (For Nothing Nothing Nothing Continue, read "")
+
         describe "PrettyPrint" $ do
             it "should render return statement" $ do
                 let statement = Return $ Int64 124
@@ -224,3 +232,19 @@ spec = do
                         , "    NOOP"
                         ]
                 render for `shouldBe` rendered
+
+            it "should render loops with break" $ do
+                let loop = For Nothing Nothing Nothing Break
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FOR ( ; ; )"
+                        , "    BREAK"
+                        ]
+                render loop `shouldBe` rendered
+
+            it "should render loops with continue" $ do
+                let loop = For Nothing Nothing Nothing Continue
+                    rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
+                        [ "FOR ( ; ; )"
+                        , "    CONTINUE"
+                        ]
+                render loop `shouldBe` rendered

@@ -57,4 +57,4 @@ isValidIdentifier identifier@(c:cs) =  isLeadingChar c
 isValidIdentifier []                = False
 
 reserved :: [String]
-reserved = ["int", "return"]
+reserved = ["int", "return", "break", "continue", "for", "do", "while"]
