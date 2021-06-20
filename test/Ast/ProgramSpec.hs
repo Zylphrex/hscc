@@ -6,8 +6,7 @@ import Control.Applicative ( Alternative(empty) )
 import Data.Default ( def )
 import Test.Hspec
 
--- import Assembly ( joinAssembly, toAssembly )
-import Ast.BlockItem ( BlockItem(..), Statement(..) )
+import Ast.BlockItem ( BlockItem(..), Statement(..), Declaration(..) )
 import Ast.Expression ( Expression(..) )
 import Ast.Function ( Function(..) )
 import Ast.Identifier ( toIdentifier )
@@ -593,9 +592,9 @@ spec = do
             it "translates programs with variables" $ do
                 let a          = toIdentifier "a"
                     b          = toIdentifier "b"
-                    statement1 = DeclarationItem Int a Nothing
+                    statement1 = DeclarationItem $ Declaration Int a Nothing
                     statement2 = StatementItem $ Expression $ Just $ AssignmentExpression a Assignment $ Int64 1
-                    statement3 = DeclarationItem Int b $ Just $ Int64 2
+                    statement3 = DeclarationItem $ Declaration Int b $ Just $ Int64 2
                     statement4 = StatementItem $ Return $ BinaryExpression (Variable a) Addition (Variable b)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
@@ -642,7 +641,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ DeclarationItem Int a $ Just $ Int64 1
+                                        , body       = [ DeclarationItem $ Declaration Int a $ Just $ Int64 1
                                                        , StatementItem exp0
                                                        , StatementItem exp1
                                                        , StatementItem exp2
@@ -760,8 +759,8 @@ spec = do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ DeclarationItem Int (toIdentifier "a") Nothing
-                                                       , DeclarationItem Int (toIdentifier "a") Nothing
+                                        , body       = [ DeclarationItem $ Declaration Int (toIdentifier "a") Nothing
+                                                       , DeclarationItem $ Declaration Int (toIdentifier "a") Nothing
                                                        , StatementItem $ Return $ Int64 1
                                                        ]
                                         }
@@ -875,9 +874,9 @@ spec = do
             it "translates programs with compound statement with variable shadowing" $ do
                 let a          = toIdentifier "a"
                     b          = toIdentifier "b"
-                    statement1 = DeclarationItem Int a $ Just $ Int64 1
-                    compound   = StatementItem $ Compound [ DeclarationItem Int a $ Just $ Int64 2 ]
-                    statement2 = DeclarationItem Int b $ Just $ Int64 3
+                    statement1 = DeclarationItem $ Declaration Int a $ Just $ Int64 1
+                    compound   = StatementItem $ Compound [ DeclarationItem $ Declaration Int a $ Just $ Int64 2 ]
+                    statement2 = DeclarationItem $ Declaration  Int b $ Just $ Int64 3
                     function   = Function { returnType = Int
                                           , identifier = toIdentifier "main"
                                           , arguments  = ()
@@ -908,7 +907,7 @@ spec = do
 
             it "translates programs with while loops" $ do
                 let a         = toIdentifier "a"
-                    statement = DeclarationItem Int a $ Just $ Int64 5
+                    statement = DeclarationItem $ Declaration Int a $ Just $ Int64 5
                     condition = BinaryExpression (Variable a) GreaterThanEquals (Int64 0)
                     loopBody  = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
                     function  = Function { returnType = Int
@@ -953,7 +952,7 @@ spec = do
 
             it "translates programs with do while loops" $ do
                 let a         = toIdentifier "a"
-                    statement = DeclarationItem Int a $ Just $ Int64 5
+                    statement = DeclarationItem $ Declaration Int a $ Just $ Int64 5
                     condition = BinaryExpression (Variable a) GreaterThanEquals (Int64 0)
                     loopBody  = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
                     function  = Function { returnType = Int
@@ -1005,7 +1004,7 @@ spec = do
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
                                         , arguments  = ()
-                                        , body       = [ DeclarationItem Int i Nothing
+                                        , body       = [ DeclarationItem $ Declaration Int i Nothing
                                                        , StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
