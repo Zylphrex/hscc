@@ -1332,7 +1332,7 @@ spec = do
                                          , "\tretq"
                                          ]
 
-            it "translates programs with do while loop with Continue" $ do
+            it "translates programs with do while loop with continue" $ do
                 let loop = DoWhile Continue (Int64 0)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
@@ -1359,6 +1359,30 @@ spec = do
                                          , "\tpop\t%rbp"
                                          , "\tretq"
                                          ]
+
+            it "does not allow break outside of loop" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem Break
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
+
+            it "does not allow continue outside of loop" $ do
+                let function = Function { returnType = Int
+                                        , identifier = toIdentifier "main"
+                                        , arguments  = ()
+                                        , body       = [ StatementItem Break
+                                                       , StatementItem $ Return $ Int64 0
+                                                       ]
+                                        }
+                    program = Program function
+                    assembly = executeCompiler (compile program) def
+                assembly `shouldBe` empty
 
         describe "PrettyPrint" $ do
             it "should render Program" $ do
