@@ -142,12 +142,10 @@ setLoop (continueTarget', breakTarget') = do
     return (continueTarget state, breakTarget state)
 
 getContinueTarget :: CompilerStateT (Maybe String)
-getContinueTarget = do
-    continueTarget <$> getState
+getContinueTarget = continueTarget <$> getState
 
 getBreakTarget :: CompilerStateT (Maybe String)
-getBreakTarget = do
-    breakTarget <$> getState
+getBreakTarget = breakTarget <$> getState
 
 newtype Compiler a = Compiler
     { runCompiler :: CompilerStateT a
