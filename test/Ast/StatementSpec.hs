@@ -5,7 +5,7 @@ module Ast.StatementSpec ( spec ) where
 import Control.Applicative ( Alternative(empty) )
 import Test.Hspec
 
-import Ast.BlockItem ( BlockItem(..), Statement(..) )
+import Ast.BlockItem ( BlockItem(..), Statement(..), Declaration(..) )
 import Ast.Expression ( Expression(..) )
 import Ast.Identifier ( toIdentifier )
 import Ast.Operator ( AssignmentOperator(..), BinaryOperator(..) )
@@ -126,7 +126,7 @@ spec = do
 
             it "should render compound statement" $ do
                 let a = toIdentifier "a"
-                    statement = Compound [ DeclarationItem Int a Nothing
+                    statement = Compound [ DeclarationItem $ Declaration Int a Nothing
                                          , StatementItem $ Return $ Variable a
                                          ]
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines

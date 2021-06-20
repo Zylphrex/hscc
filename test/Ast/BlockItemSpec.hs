@@ -4,7 +4,7 @@ module Ast.BlockItemSpec ( spec ) where
 
 import Test.Hspec
 
-import Ast.BlockItem ( BlockItem(..), Statement(..) )
+import Ast.BlockItem ( BlockItem(..), Statement(..), Declaration(..) )
 import Ast.Expression ( Expression(Int64) )
 import Ast.Identifier ( toIdentifier )
 import Ast.Type ( Type(..) )
@@ -21,19 +21,19 @@ spec = do
 
             it "parses declaration block item without assignment" $ do
                 let mResult = tryParser (parse :: Parser BlockItem) "int stuff;"
-                mResult `shouldBe` pure (DeclarationItem Int (toIdentifier "stuff") Nothing, read "")
+                mResult `shouldBe` pure (DeclarationItem $ Declaration Int (toIdentifier "stuff") Nothing, read "")
 
             it "parses declaration block item without assignment and leaves the rest" $ do
                 let mResult = tryParser (parse :: Parser BlockItem) "int stuff;ccc"
-                mResult `shouldBe` pure (DeclarationItem Int (toIdentifier "stuff") Nothing, read "ccc")
+                mResult `shouldBe` pure (DeclarationItem $ Declaration Int (toIdentifier "stuff") Nothing, read "ccc")
 
             it "parses declaration block item with assignment" $ do
                 let mResult = tryParser (parse :: Parser BlockItem) "int stuff = 0;"
-                mResult `shouldBe` pure (DeclarationItem Int (toIdentifier "stuff") (Just (Int64 0)), read "")
+                mResult `shouldBe` pure (DeclarationItem $ Declaration Int (toIdentifier "stuff") (Just (Int64 0)), read "")
 
             it "parses declaration block item with assignment and leaves the rest" $ do
                 let mResult = tryParser (parse :: Parser BlockItem) "int stuff = 0;ccc"
-                mResult `shouldBe` pure (DeclarationItem Int (toIdentifier "stuff") (Just (Int64 0)), read "ccc")
+                mResult `shouldBe` pure (DeclarationItem $ Declaration Int (toIdentifier "stuff") (Just (Int64 0)), read "ccc")
 
         describe "PrettyPrint" $ do
             it "should render return statement block item" $ do
@@ -45,9 +45,9 @@ spec = do
                 render blockItem `shouldBe` "124"
 
             it "should render declaration block item without assignment" $ do
-                let blockItem = DeclarationItem Int (toIdentifier "x") Nothing
+                let blockItem = DeclarationItem $ Declaration Int (toIdentifier "x") Nothing
                 render blockItem `shouldBe` "INT x"
 
             it "should render declaration block item with assignment" $ do
-                let blockItem = DeclarationItem Int (toIdentifier "x") $ Just $ Int64 124
+                let blockItem = DeclarationItem $ Declaration Int (toIdentifier "x") $ Just $ Int64 124
                 render blockItem `shouldBe` "INT x = 124"

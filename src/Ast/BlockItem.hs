@@ -1,4 +1,7 @@
-module Ast.BlockItem ( BlockItem(..), Statement(..) ) where
+module Ast.BlockItem ( BlockItem(..)
+                     , Statement(..)
+                     , Declaration(..)
+                     ) where
 
 import Control.Applicative as A ( Alternative(empty, (<|>)), many )
 import Control.Monad ( mapM, when )
@@ -37,48 +40,20 @@ import Parser ( Parse(parse)
 import Pretty ( PrettyPrint(prettyPrint) )
 
 data BlockItem = StatementItem Statement
-               | DeclarationItem Type Identifier (Maybe Expression)
+               | DeclarationItem Declaration
     deriving (Eq, Show)
 
 instance Parse BlockItem where
     parse = StatementItem <$> parse
         <|> DeclarationItem <$> parse
-                            <*> (parseNotNull parseSpaces *> parse)
-                            <*> ( ( ( pure <$> (  parseSpaces
-                                               *> parseCharacter '='
-                                               *> parseSpaces
-                                               *> parse
-                                               )
-                                  ) <|> pure A.empty )
-                                  <* parseSpaces
-                                  <* parseCharacter ';'
-                                )
 
 instance Compile BlockItem where
     compile (StatementItem statement) = compile statement
-    compile (DeclarationItem variableType identifier mExpression) = Compiler $ do
-        expression' <- if isJust mExpression
-                       then runCompiler $ compile $ fromJust mExpression
-                       else pure []
-        let identifier' = fromIdentifier identifier
-        alreadyDeclared <- isDeclared identifier'
-        when alreadyDeclared $ fail $ "Variable: " ++ identifier' ++ " is already declared"
-        pushFrame identifier' $ bytes variableType
-        return $ expression'
-              ++ [ "\tpush\t%rax" ]
+    compile (DeclarationItem declaration) = compile declaration
 
 instance PrettyPrint BlockItem where
     prettyPrint (StatementItem statement) = prettyPrint statement
-    prettyPrint (DeclarationItem variableType identifier mExpression) =
-         prettyPrint variableType
-      <> P.space
-      <> P.text (fromIdentifier identifier)
-      <> if isJust mExpression
-         then  P.space
-            <> P.equals
-            <> P.space
-            <> prettyPrint (fromJust mExpression)
-         else P.empty
+    prettyPrint (DeclarationItem declaration) = prettyPrint declaration
 
 data Statement = Return Expression
                | Conditional Expression Statement (Maybe Statement)
@@ -310,3 +285,43 @@ instance PrettyPrint Statement where
              , nest 4 $ prettyPrint statement
              , text "WHILE" <> space <> prettyPrint expression
              ]
+
+data Declaration = Declaration Type Identifier (Maybe Expression)
+    deriving (Eq, Show)
+
+instance Parse Declaration where
+    parse = Declaration <$> parse
+                        <*> (parseNotNull parseSpaces *> parse)
+                        <*> ( ( ( pure <$> (  parseSpaces
+                                           *> parseCharacter '='
+                                           *> parseSpaces
+                                           *> parse
+                                           )
+                              ) <|> pure A.empty )
+                              <* parseSpaces
+                              <* parseCharacter ';'
+                            )
+
+instance Compile Declaration where
+    compile (Declaration variableType identifier mExpression) = Compiler $ do
+        expression' <- if isJust mExpression
+                       then runCompiler $ compile $ fromJust mExpression
+                       else pure []
+        let identifier' = fromIdentifier identifier
+        alreadyDeclared <- isDeclared identifier'
+        when alreadyDeclared $ fail $ "Variable: " ++ identifier' ++ " is already declared"
+        pushFrame identifier' $ bytes variableType
+        return $ expression'
+              ++ [ "\tpush\t%rax" ]
+
+instance PrettyPrint Declaration where
+    prettyPrint (Declaration variableType identifier mExpression) =
+         prettyPrint variableType
+      <> P.space
+      <> P.text (fromIdentifier identifier)
+      <> if isJust mExpression
+         then  P.space
+            <> P.equals
+            <> P.space
+            <> prettyPrint (fromJust mExpression)
+         else P.empty
