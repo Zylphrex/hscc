@@ -37,3 +37,11 @@ spec = do
         describe "bytes" $ do
             it "should return the correct size in bytes" $ do
                 bytes Int `shouldBe` 8
+
+        describe "deriving" $ do
+            it "works with Show" $ do
+                show Int `shouldBe` "Int"
+
+            it "works with Eq" $ do
+                Int == Int `shouldBe` True
+                Int /= Int `shouldBe` True
