@@ -44,4 +44,4 @@ spec = do
 
             it "works with Eq" $ do
                 Int == Int `shouldBe` True
-                Int /= Int `shouldBe` True
+                Int /= Int `shouldBe` False
