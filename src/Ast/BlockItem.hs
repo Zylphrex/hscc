@@ -29,7 +29,7 @@ import Compiler ( Compiler(Compiler)
                 , getSymbols
                 , runCompiler
                 , isDeclared
-                , pushFrame
+                , pushDeclared
                 , setLoop
                 , getContinueTarget
                 , getBreakTarget
@@ -97,32 +97,32 @@ instance Parse Statement where
                          <* parseCharacter '}'
                          )
         <|> do
-              _ <- parseString "for" *> parseSpaces *> parseCharacter '('
-              init <- parseSpaces
-                   *> (Just <$> parse <|> pure Nothing)
-                   <* parseSpaces
-                   <* parseCharacter ';'
-              condition <- parseSpaces
-                        *> (Just <$> parse <|> pure Nothing)
-                        <* parseSpaces
-                        <* parseCharacter ';'
-              step <- parseSpaces
-                   *> (Just <$> parse <|> pure Nothing)
-              _ <- parseSpaces *> parseCharacter ')'
-              statement <- parseSpaces *> parse
-              return $ For init condition step statement
+                _ <- parseString "for" *> parseSpaces *> parseCharacter '('
+                init <- parseSpaces
+                     *> (Just <$> parse <|> pure Nothing)
+                     <* parseSpaces
+                     <* parseCharacter ';'
+                condition <- parseSpaces
+                          *> (Just <$> parse <|> pure Nothing)
+                          <* parseSpaces
+                          <* parseCharacter ';'
+                step <- parseSpaces
+                     *> (Just <$> parse <|> pure Nothing)
+                _ <- parseSpaces *> parseCharacter ')'
+                statement <- parseSpaces *> parse
+                return $ For init condition step statement
         <|> do
-              _ <- parseString "for" *> parseSpaces *> parseCharacter '('
-              init <- parseSpaces *> (Just <$> parse <|> pure Nothing)
-              condition <- parseSpaces
-                        *> (Just <$> parse <|> pure Nothing)
-                        <* parseSpaces
-                        <* parseCharacter ';'
-              step <- parseSpaces
-                   *> (Just <$> parse <|> pure Nothing)
-              _ <- parseSpaces *> parseCharacter ')'
-              statement <- parseSpaces *> parse
-              return $ ForDeclaration init condition step statement
+                _ <- parseString "for" *> parseSpaces *> parseCharacter '('
+                init <- parseSpaces *> (Just <$> parse <|> pure Nothing)
+                condition <- parseSpaces
+                          *> (Just <$> parse <|> pure Nothing)
+                          <* parseSpaces
+                          <* parseCharacter ';'
+                step <- parseSpaces
+                     *> (Just <$> parse <|> pure Nothing)
+                _ <- parseSpaces *> parseCharacter ')'
+                statement <- parseSpaces *> parse
+                return $ ForDeclaration init condition step statement
         <|> While <$> (  parseString "while"
                       *> parseSpaces
                       *> parseCharacter '('
@@ -373,7 +373,7 @@ instance Compile Declaration where
         let identifier' = fromIdentifier identifier
         alreadyDeclared <- isDeclared identifier'
         when alreadyDeclared $ fail $ "Variable: " ++ identifier' ++ " is already declared"
-        pushFrame identifier' $ bytes variableType
+        pushDeclared identifier' $ bytes variableType
         return $ expression'
               ++ [ "\tpush\t%rax" ]
 

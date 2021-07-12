@@ -7,7 +7,7 @@ import Test.Hspec
 
 import Ast.BlockItem ( BlockItem(..), Statement(..) )
 import Ast.Expression ( Expression(Int64) )
-import Ast.Function ( Function(..) )
+import Ast.Function ( Argument(..), Function(..) )
 import Ast.Identifier ( toIdentifier )
 import Ast.Type ( Type(..) )
 import Parser ( Parser, Parse(parse), tryParser )
@@ -20,12 +20,12 @@ spec = do
             it "should have accessors for properties" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
                 returnType function `shouldBe` Int
                 identifier function `shouldBe` toIdentifier "main"
-                arguments function `shouldBe` ()
+                arguments function `shouldBe` []
                 body function `shouldBe` [StatementItem $ Return (Int64 124)]
 
         describe "Parse" $ do
@@ -65,7 +65,7 @@ spec = do
                 let mResult = tryParser (parse :: Parser Function) "int main () {return 124;}"
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
                 mResult `shouldBe` pure (function, read "")
@@ -74,7 +74,7 @@ spec = do
                 let mResult = tryParser (parse :: Parser Function) "int main () {}"
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 0]
                                         }
                 mResult `shouldBe` pure (function, read "")
@@ -83,12 +83,12 @@ spec = do
             it "should render function" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = [Argument Int (toIdentifier "x"), Argument Int (toIdentifier "y")]
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
                         [ "FUN INT main:"
-                        , "    params: ()"
+                        , "    params: (INT x, INT y)"
                         , "    body:"
                         , "        RETURN 124"
                         ]
