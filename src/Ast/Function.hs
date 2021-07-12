@@ -85,7 +85,7 @@ instance Compile Function where
         functionArgs <- resetFunctionArgs
         stackFrame <- resetStackFrame
         let (returnType', identifier', arguments') = formatSignature functionDeclaration
-        forM_ (zip [0..] arguments) $ \((index, Argument argType argIdentifier)) -> do
+        forM_ (zip [0..] arguments) $ \(index, Argument argType argIdentifier) ->
             pushArgument index (fromIdentifier argIdentifier) (bytes argType)
         pushFunctionDeclaration returnType' identifier' arguments'
         identifier' <- runCompiler $ compile identifier
