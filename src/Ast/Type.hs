@@ -1,4 +1,4 @@
-module Ast.Type ( Type(..), bytes ) where
+module Ast.Type ( Type(..), bytes, fromType, toType ) where
 
 import Text.PrettyPrint ( text )
 
@@ -16,3 +16,10 @@ instance PrettyPrint Type where
 
 bytes :: Type -> Int
 bytes Int = 8
+
+fromType :: Type -> String
+fromType Int = "int"
+
+toType :: String -> Type
+toType "int" = Int
+toType t = error $ t ++ " is not a valid type"

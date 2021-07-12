@@ -1,11 +1,11 @@
 module Ast.Expression ( Expression(..) ) where
 
 import Control.Applicative ( Alternative((<|>), many) )
-import Control.Monad ( when )
+import Control.Monad ( mapM, when )
 import Data.Char ( isDigit )
 import Data.Int ( Int64 )
 import Data.Maybe ( fromJust, isNothing )
-import Text.PrettyPrint ( char, colon, equals, parens, space, text )
+import Text.PrettyPrint ( char, colon, equals, hcat, parens, space, text )
 
 import Ast.Operator ( UnaryOperator(..)
                     , BinaryOperator(..)
@@ -13,11 +13,17 @@ import Ast.Operator ( UnaryOperator(..)
                     )
 import Compiler ( Compiler(Compiler)
                 , Compile(compile)
+                , FunctionSignature(FunctionSignature)
+                , argumentRegister
                 , runCompiler
-                , getOffset
+                , getFunctionSignature
+                , getVariable
                 , getSymbols
+                , saveFunctionArgs
+                , restoreFunctionArgs
                 )
 import Ast.Identifier ( Identifier, fromIdentifier )
+import Ast.Type ( bytes, toType )
 import Parser ( Parse(parse)
               , Parser
               , parseCharacter
@@ -32,8 +38,9 @@ data Expression = Int64 Int64
                 | UnaryExpression UnaryOperator Expression
                 | BinaryExpression Expression BinaryOperator Expression
                 | AssignmentExpression Identifier AssignmentOperator Expression
-                | Variable Identifier
                 | ConditionalExpression Expression Expression Expression
+                | FunctionCallExpression Identifier [Expression]
+                | Variable Identifier
     deriving (Eq, Show)
 
 instance Parse Expression where
@@ -61,8 +68,8 @@ instance Compile Expression where
         return $ exp1'
               ++ [ "\tpush\t%rax" ]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\taddq\t%rcx, %rax"
+              ++ [ "\tpop\t%rbx"
+                 , "\taddq\t%rbx, %rax"
                  ]
     compile (BinaryExpression exp1 Subtraction exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -70,8 +77,8 @@ instance Compile Expression where
         return $ exp2'
               ++ [ "\tpush\t%rax" ]
               ++ exp1'
-              ++ [ "\tpop\t%rcx"
-                 , "\tsubq\t%rcx, %rax"
+              ++ [ "\tpop\t%rbx"
+                 , "\tsubq\t%rbx, %rax"
                  ]
     compile (BinaryExpression exp1 Multiplication exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -79,8 +86,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\timulq\t%rcx, %rax"
+              ++ [ "\tpop\t%rbx"
+                 , "\timulq\t%rbx, %rax"
                  ]
     compile (BinaryExpression exp1 Division exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -89,8 +96,8 @@ instance Compile Expression where
               ++ ["\tpush\t%rax"]
               ++ exp1'
               ++ [ "\tcqto"
-                 , "\tpop\t%rcx"
-                 , "\tidivq\t%rcx"
+                 , "\tpop\t%rbx"
+                 , "\tidivq\t%rbx"
                  ]
     compile (BinaryExpression exp1 Modulus exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -99,8 +106,8 @@ instance Compile Expression where
               ++ ["\tpush\t%rax"]
               ++ exp1'
               ++ [ "\tcqto"
-                 , "\tpop\t%rcx"
-                 , "\tidivq\t%rcx"
+                 , "\tpop\t%rbx"
+                 , "\tidivq\t%rbx"
                  , "\tmovq\t%rdx, %rax"
                  ]
     compile (BinaryExpression exp1 LessThanEquals exp2) = Compiler $ do
@@ -109,8 +116,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tcmpq\t%rax, %rcx"
+              ++ [ "\tpop\t%rbx"
+                 , "\tcmpq\t%rax, %rbx"
                  , "\tmovq\t$0, %rax"
                  , "\tsetle\t%al"
                  ]
@@ -120,8 +127,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tcmpq\t%rax, %rcx"
+              ++ [ "\tpop\t%rbx"
+                 , "\tcmpq\t%rax, %rbx"
                  , "\tmovq\t$0, %rax"
                  , "\tsetge\t%al"
                  ]
@@ -131,8 +138,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tcmpq\t%rax, %rcx"
+              ++ [ "\tpop\t%rbx"
+                 , "\tcmpq\t%rax, %rbx"
                  , "\tmovq\t$0, %rax"
                  , "\tsetl\t%al"
                  ]
@@ -142,8 +149,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tcmpq\t%rax, %rcx"
+              ++ [ "\tpop\t%rbx"
+                 , "\tcmpq\t%rax, %rbx"
                  , "\tmovq\t$0, %rax"
                  , "\tsetg\t%al"
                  ]
@@ -153,8 +160,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tcmpq\t%rax, %rcx"
+              ++ [ "\tpop\t%rbx"
+                 , "\tcmpq\t%rax, %rbx"
                  , "\tmovq\t$0, %rax"
                  , "\tsete\t%al"
                  ]
@@ -164,8 +171,8 @@ instance Compile Expression where
         return $ exp1'
               ++ ["\tpush\t%rax"]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tcmpq\t%rax, %rcx"
+              ++ [ "\tpop\t%rbx"
+                 , "\tcmpq\t%rax, %rbx"
                  , "\tmovq\t$0, %rax"
                  , "\tsetne\t%al"
                  ]
@@ -175,8 +182,8 @@ instance Compile Expression where
         return $ exp1'
               ++ [ "\tpush\t%rax" ]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\tandq\t%rcx, %rax"
+              ++ [ "\tpop\t%rbx"
+                 , "\tandq\t%rbx, %rax"
                  ]
     compile (BinaryExpression exp1 BitwiseXor exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -184,8 +191,8 @@ instance Compile Expression where
         return $ exp1'
               ++ [ "\tpush\t%rax" ]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\txorq\t%rcx, %rax"
+              ++ [ "\tpop\t%rbx"
+                 , "\txorq\t%rbx, %rax"
                  ]
     compile (BinaryExpression exp1 BitwiseOr exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -193,8 +200,8 @@ instance Compile Expression where
         return $ exp1'
               ++ [ "\tpush\t%rax" ]
               ++ exp2'
-              ++ [ "\tpop\t%rcx"
-                 , "\torq\t%rcx, %rax"
+              ++ [ "\tpop\t%rbx"
+                 , "\torq\t%rbx, %rax"
                  ]
     compile (BinaryExpression exp1 BitwiseShiftLeft exp2) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
@@ -202,7 +209,7 @@ instance Compile Expression where
         return $ exp2'
               ++ [ "\tpush\t%rax" ]
               ++ exp1'
-              ++ [ "\tpop\t%rcx"
+              ++ [ "\tpop\t%rbx"
                  , "\tsalq\t%cl, %rax"
                  ]
     compile (BinaryExpression exp1 BitwiseShiftRight exp2) = Compiler $ do
@@ -211,7 +218,7 @@ instance Compile Expression where
         return $ exp2'
               ++ [ "\tpush\t%rax" ]
               ++ exp1'
-              ++ [ "\tpop\t%rcx"
+              ++ [ "\tpop\t%rbx"
                  , "\tsarq\t%cl, %rax"
                  ]
     compile (BinaryExpression exp1 LogicalAnd exp2) = Compiler $ do
@@ -249,12 +256,12 @@ instance Compile Expression where
                  ]
     compile (AssignmentExpression identifier Assignment exp) = Compiler $ do
         let identifier' = fromIdentifier identifier
-        stackOffset <- getOffset identifier'
-        when (isNothing stackOffset)
+        register <- getVariable identifier'
+        when (isNothing register)
              (fail $ "Variable: " ++ identifier' ++ " is not declared")
         exp' <- runCompiler $ compile exp
         return $ exp'
-              ++ [ "\tmovq\t%rax, " ++ show (fromJust stackOffset) ++ "(%rbp)" ]
+              ++ [ "\tmovq\t%rax, " ++ fromJust register ]
     compile (AssignmentExpression identifier operator exp) = Compiler $ do
         let binaryOperator = case operator of
                 MultiplicationAssignment    -> Multiplication
@@ -272,10 +279,10 @@ instance Compile Expression where
         runCompiler $ compile assignmentExpression
     compile (Variable identifier) = Compiler $ do
         let identifier' = fromIdentifier identifier
-        stackOffset <- getOffset identifier'
-        when (isNothing stackOffset)
+        register <- getVariable identifier'
+        when (isNothing register)
              (fail $ "Variable: " ++ identifier' ++ " is not declared")
-        return [ "\tmovq\t" ++ show (fromJust stackOffset) ++ "(%rbp), %rax" ]
+        return [ "\tmovq\t" ++ fromJust register ++ ", %rax" ]
     compile (ConditionalExpression exp1 exp2 exp3) = Compiler $ do
         exp1' <- runCompiler $ compile exp1
         exp2' <- runCompiler $ compile exp2
@@ -291,6 +298,28 @@ instance Compile Expression where
                  ]
               ++ exp3'
               ++ [ end ++ ":" ]
+    compile (FunctionCallExpression identifier arguments) = Compiler $ do
+        let identifier' = fromIdentifier identifier
+        msignature <- getFunctionSignature identifier'
+        when (isNothing msignature)
+             (fail $ "Function: " ++ identifier' ++ " is not declared")
+        let FunctionSignature _ _ argumentMetas = fromJust msignature
+        when (length arguments /= length argumentMetas)
+             (fail $ "Function: " ++ identifier' ++ " called with the wrong number of arguments")
+        saveArgs <- saveFunctionArgs
+        arguments' <- mapM pushArg $ reverse $ zip3 [0..] arguments argumentMetas
+        identifier' <- runCompiler $ compile identifier
+        restoreArgs <- restoreFunctionArgs
+        return $ saveArgs
+              ++ concat arguments'
+              ++ [ "\tcallq " ++ head identifier' ]
+              ++ restoreArgs
+      where pushArg (index, argExp, (argType, argIdentifier)) = do
+              argExp' <- runCompiler $ compile argExp
+              if index >= 6
+              then return $ argExp' ++ [ "\tpush\t%rax" ]
+              else let register = argumentRegister index
+                   in return $ argExp' ++ [ "\tmovq\t%rax, " ++ register]
 
 instance PrettyPrint Expression where
     prettyPrint (Int64 num) = text $ show num
@@ -299,13 +328,15 @@ instance PrettyPrint Expression where
         parens $ prettyPrint exp1 <> prettyPrint op <> prettyPrint exp2
     prettyPrint (AssignmentExpression identifier op exp) =
         prettyPrint identifier <> space <> prettyPrint op <> space <> prettyPrint exp
-    prettyPrint (Variable identifier) = prettyPrint identifier
     prettyPrint (ConditionalExpression exp1 exp2 exp3) =
         parens (prettyPrint exp1)
         <> space <> char '?' <> space
         <> parens (prettyPrint exp2)
         <> space <> colon <> space
         <> parens (prettyPrint exp3)
+    prettyPrint (FunctionCallExpression identifier exps) =
+        prettyPrint identifier <> parens (hcat $ map prettyPrint exps)
+    prettyPrint (Variable identifier) = prettyPrint identifier
 
 data RawExpression = RawAssignmentExpressionWrapper RawAssignmentExpression
                    | RawConditionalExpressionWrapper RawConditionalExpression
@@ -524,6 +555,7 @@ instance Exp RawTerm where
 data RawFactor = RawFactor RawExpression
                | UnaryRawFactor UnaryOperator RawFactor
                | IntegerRawFactor Int64
+               | FunctionCallRawFactor Identifier [RawExpression]
                | VariableRawFactor Identifier
 
 instance Parse RawFactor where
@@ -535,13 +567,30 @@ instance Parse RawFactor where
                           )
         <|> UnaryRawFactor <$> parse <*> parse
         <|> IntegerRawFactor <$> (read <$> parseNotNull (parseWhile isDigit))
+        <|> do
+                identifier <- parse
+                _ <- parseSpaces *> parseCharacter '('
+                margument <- parseSpaces *> (Just <$> parse <|> pure Nothing)
+                case margument of
+                    Nothing -> do
+                        _ <- parseSpaces *> parseCharacter ')'
+                        return $ FunctionCallRawFactor identifier []
+                    Just argument -> do
+                        arguments <- many (  parseSpaces
+                                          *> parseCharacter ','
+                                          *> parseSpaces
+                                          *> (parse :: Parser RawExpression)
+                                          )
+                        _ <- parseSpaces *> parseCharacter ')'
+                        return $ FunctionCallRawFactor identifier (argument:arguments)
         <|> VariableRawFactor <$> parse
 
 instance Exp RawFactor where
-    toExpression (RawFactor exp)       = toExpression exp
-    toExpression (UnaryRawFactor op f) = UnaryExpression op $ toExpression f
-    toExpression (IntegerRawFactor x)  = Int64 x
-    toExpression (VariableRawFactor v) = Variable v
+    toExpression (RawFactor exp)                = toExpression exp
+    toExpression (UnaryRawFactor op f)          = UnaryExpression op $ toExpression f
+    toExpression (IntegerRawFactor x)           = Int64 x
+    toExpression (FunctionCallRawFactor i args) = FunctionCallExpression i $ map toExpression args
+    toExpression (VariableRawFactor v)          = Variable v
 
 data RawExp t o = RawExp t [(o, t)]
 

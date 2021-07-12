@@ -32,30 +32,30 @@ spec = do
                 let mResult = tryParser (parse :: Parser Program) "int main () {return 124;}"
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
-                    program = Program function
+                    program = Program [function]
                 mResult `shouldBe` pure (program, read "")
 
             it "parses simple program and leaves the rest" $ do
                 let mResult = tryParser (parse :: Parser Program) "int main () {return 124;}ccc"
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
-                    program = Program function
+                    program = Program [function]
                 mResult `shouldBe` pure (program, read "ccc")
 
         describe "Compile" $ do
             it "translates simple program" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -70,12 +70,12 @@ spec = do
             it "translates simple program with empty statement" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem $ Expression Nothing
                                                        , StatementItem $ Return $ Int64 124
                                                        ]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -91,10 +91,10 @@ spec = do
                 let expression = UnaryExpression Negation $ Int64 124
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -111,10 +111,10 @@ spec = do
                 let expression = UnaryExpression BitwiseComplement $ Int64 124
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -131,10 +131,10 @@ spec = do
                 let expression = UnaryExpression LogicalNegation $ Int64 124
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -153,10 +153,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) Addition (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -176,10 +176,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) Subtraction (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -199,10 +199,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) Multiplication (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -222,10 +222,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) Division (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -246,10 +246,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) Modulus (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -271,10 +271,10 @@ spec = do
                 let expression = BinaryExpression (Int64 2) BitwiseAnd (Int64 4)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -294,10 +294,10 @@ spec = do
                 let expression = BinaryExpression (Int64 2) BitwiseOr (Int64 4)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -317,10 +317,10 @@ spec = do
                 let expression = BinaryExpression (Int64 2) BitwiseXor (Int64 4)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -340,10 +340,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) BitwiseShiftLeft (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -363,10 +363,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) BitwiseShiftRight (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -386,10 +386,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) LessThanEquals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -411,10 +411,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) GreaterThanEquals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -436,10 +436,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) LessThan (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -461,10 +461,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) Equals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -486,10 +486,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) NotEquals (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -511,10 +511,10 @@ spec = do
                 let expression = BinaryExpression (Int64 4) GreaterThan (Int64 2)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -536,10 +536,10 @@ spec = do
                 let expression = BinaryExpression (Int64 0) LogicalAnd (Int64 1)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -564,10 +564,10 @@ spec = do
                 let expression = BinaryExpression (Int64 0) LogicalOr (Int64 1)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return expression]
                                         }
-                    program  = Program function
+                    program  = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -598,14 +598,14 @@ spec = do
                     statement4 = StatementItem $ Return $ BinaryExpression (Variable a) Addition (Variable b)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ statement1
                                                        , statement2
                                                        , statement3
                                                        , statement4
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -640,7 +640,7 @@ spec = do
                     exp9 = Expression $ Just $ AssignmentExpression a BitwiseXorAssignment $ Int64 1
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ DeclarationItem $ Declaration Int a $ Just $ Int64 1
                                                        , StatementItem exp0
                                                        , StatementItem exp1
@@ -655,7 +655,7 @@ spec = do
                                                        , StatementItem $ Return $ Variable a
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -736,35 +736,35 @@ spec = do
                 let assignment = AssignmentExpression (toIdentifier "a") Assignment (Int64 1)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem $ Expression $ Just assignment
                                                        , StatementItem $ Return $ Int64 1
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
             it "fails to translate program with invalid variable" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem $ Return $ Variable $ toIdentifier "a" ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
             it "fails to translate program redeclaring a variable" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ DeclarationItem $ Declaration Int (toIdentifier "a") Nothing
                                                        , DeclarationItem $ Declaration Int (toIdentifier "a") Nothing
                                                        , StatementItem $ Return $ Int64 1
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
@@ -772,11 +772,11 @@ spec = do
                 let return1  = Return $ Int64 1
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem $ Conditional (Int64 1) return1 Nothing
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -797,11 +797,11 @@ spec = do
                     return2  = Return $ Int64 2
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem $ Conditional (Int64 1) return1 $ Just return2
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -828,10 +828,10 @@ spec = do
                     statement  = StatementItem $ Return expression
                     function   = Function { returnType = Int
                                           , identifier = toIdentifier "main"
-                                          , arguments  = ()
+                                          , arguments  = []
                                           , body       = [ statement ]
                                           }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -855,10 +855,10 @@ spec = do
                     compound  = StatementItem $ Compound [StatementItem statement]
                     function  = Function { returnType = Int
                                          , identifier = toIdentifier "main"
-                                         , arguments  = ()
+                                         , arguments  = []
                                          , body       = [ compound ]
                                          }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -879,14 +879,14 @@ spec = do
                     statement2 = DeclarationItem $ Declaration  Int b $ Just $ Int64 3
                     function   = Function { returnType = Int
                                           , identifier = toIdentifier "main"
-                                          , arguments  = ()
+                                          , arguments  = []
                                           , body       = [ statement1
                                                          , compound
                                                          , statement2
                                                          , StatementItem $ Return $ Variable b
                                                          ]
                                           }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -912,13 +912,13 @@ spec = do
                     loopBody  = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
                     function  = Function { returnType = Int
                                          , identifier = toIdentifier "main"
-                                         , arguments  = ()
+                                         , arguments  = []
                                          , body       = [ statement
                                                         , StatementItem $ While condition loopBody
                                                         , StatementItem $ Return $ Variable a
                                                         ]
                                          }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -957,13 +957,13 @@ spec = do
                     loopBody  = Expression $ Just $ AssignmentExpression a SubtractionAssignment $ Int64 1
                     function  = Function { returnType = Int
                                          , identifier = toIdentifier "main"
-                                         , arguments  = ()
+                                         , arguments  = []
                                          , body       = [ statement
                                                         , StatementItem $ DoWhile loopBody condition
                                                         , StatementItem $ Return $ Variable a
                                                         ]
                                          }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1003,13 +1003,13 @@ spec = do
                                    (Expression Nothing)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ DeclarationItem $ Declaration Int i Nothing
                                                        , StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1047,12 +1047,12 @@ spec = do
                 let loop     = For Nothing Nothing Nothing (Expression Nothing)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1076,13 +1076,13 @@ spec = do
                                               (Expression Nothing)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ DeclarationItem $ Declaration Int i Nothing
                                                        , StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1121,12 +1121,12 @@ spec = do
                 let loop     = ForDeclaration Nothing Nothing Nothing (Expression Nothing)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1147,12 +1147,12 @@ spec = do
                 let loop = For Nothing Nothing Nothing Break
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1173,12 +1173,12 @@ spec = do
                 let loop = For Nothing Nothing Nothing Continue
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1199,12 +1199,12 @@ spec = do
                 let loop = ForDeclaration Nothing Nothing Nothing Break
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1226,12 +1226,12 @@ spec = do
                 let loop = ForDeclaration Nothing Nothing Nothing Continue
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1253,12 +1253,12 @@ spec = do
                 let loop = While (Int64 0) Break
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1281,11 +1281,11 @@ spec = do
                 let loop = While (Int64 0) Continue
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ] }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1308,12 +1308,12 @@ spec = do
                 let loop = DoWhile Break (Int64 0)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1336,12 +1336,12 @@ spec = do
                 let loop = DoWhile Continue (Int64 0)
                     function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem loop
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` pure [ "\t.globl\tmain"
                                          , "main:"
@@ -1363,24 +1363,24 @@ spec = do
             it "does not allow break outside of loop" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem Break
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
             it "does not allow continue outside of loop" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [ StatementItem Continue
                                                        , StatementItem $ Return $ Int64 0
                                                        ]
                                         }
-                    program = Program function
+                    program = Program [function]
                     assembly = executeCompiler (compile program) def
                 assembly `shouldBe` empty
 
@@ -1388,10 +1388,10 @@ spec = do
             it "should render Program" $ do
                 let function = Function { returnType = Int
                                         , identifier = toIdentifier "main"
-                                        , arguments  = ()
+                                        , arguments  = []
                                         , body       = [StatementItem $ Return $ Int64 124]
                                         }
-                    program = Program function
+                    program = Program [function]
                     rendered = reverse $ dropWhile (== '\n') $ reverse $ unlines
                         [ "FUN INT main:"
                         , "    params: ()"
